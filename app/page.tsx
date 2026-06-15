@@ -26,7 +26,7 @@ export default function App() {
 // ==========================================
 function GuestView({ setView }: { setView: (v: any) => void }) {
   const [subjects, setSubjects] = useState<Array<{ id: number; name: string; grade: string; units: string }>>([]);
-  const [targetGwa, setTargetGwa] = useState("1.50");
+  const [targetGwa, setTargetGwa] = useState("");
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [tempTarget, setTempTarget] = useState(targetGwa);
   const [displayGwa, setDisplayGwa] = useState("0.0000");
@@ -38,7 +38,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
   const saveTarget = () => {
     const num = parseFloat(tempTarget);
     if (!isNaN(num) && num > 0) setTargetGwa(num.toFixed(2));
-    else setTempTarget(targetGwa);
+    else setTargetGwa("");
     setIsEditingTarget(false);
   };
 
@@ -71,7 +71,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
 
   const numericGwa = parseFloat(gwa);
   const numericTarget = parseFloat(targetGwa);
-  const isOnTrack = numericGwa > 0 && numericGwa <= numericTarget;
+  const isOnTrack = numericGwa > 0 && !isNaN(numericTarget) && numericGwa <= numericTarget;
 
   let gwaConfig = { gradient: "from-slate-400 to-slate-600", text: "text-slate-800", bg: "bg-slate-100", dot: "bg-slate-400", message: "Awaiting input" };
   if (numericGwa > 0) {
@@ -92,7 +92,10 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                <div className="w-2.5 h-2.5 bg-indigo-500 rounded-[2px]"></div>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">BentoGWA</h1>
+              <div className="flex items-baseline gap-2">
+                <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">BentoGWA</h1>
+                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-100/50 border border-indigo-100 px-1.5 py-0.5 rounded-md hidden sm:inline-block">by Ced1e</span>
+              </div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Guest Dashboard</p>
             </div>
           </div>
@@ -164,7 +167,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
             <div className="col-span-2 lg:col-span-1 bg-white rounded-[20px] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 border border-slate-200/60">
               <div className="flex justify-between items-start mb-2">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Target GWA</p>
-                {numericGwa > 0 && (
+                {numericGwa > 0 && !isNaN(numericTarget) && (
                   <div className={`px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 ${isOnTrack ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                     {isOnTrack ? 'On Track' : 'Warning'}
                   </div>
@@ -175,7 +178,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                   <input autoFocus type="number" step="0.05" value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => e.key === 'Enter' && saveTarget()} className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" />
                 ) : (
                   <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
-                    <span className="text-3xl font-black text-slate-800 tabular-nums">{targetGwa}</span>
+                    <span className="text-3xl font-black text-slate-800 tabular-nums">{targetGwa || "--"}</span>
                     <svg className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                   </button>
                 )}
@@ -239,6 +242,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
   const [formData, setFormData] = useState({ name: "", course: "", university: "", email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -344,7 +348,14 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 </span>
-                <input required name="password" value={formData.password} onChange={handleInputChange} type="password" placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
+                <input required name="password" value={formData.password} onChange={handleInputChange} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  )}
+                </button>
               </div>
             </div>
 
@@ -356,7 +367,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
 
           <p className="mt-8 text-center text-sm text-slate-600">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <span onClick={() => { setView(isLogin ? 'signup' : 'login'); setErrorMsg(""); setFormData({name: "", course: "", university: "", email: "", password: ""}) }} className="font-bold text-indigo-600 cursor-pointer hover:text-indigo-800 hover:underline transition-colors">
+            <span onClick={() => { setView(isLogin ? 'signup' : 'login'); setErrorMsg(""); setFormData({name: "", course: "", university: "", email: "", password: ""}); setShowPassword(false); }} className="font-bold text-indigo-600 cursor-pointer hover:text-indigo-800 hover:underline transition-colors">
               {isLogin ? "Sign up" : "Log in"}
             </span>
           </p>
@@ -390,7 +401,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     university: "Student"
   });
 
-  const [targetGwa, setTargetGwa] = useState("1.50");
+  const [targetGwa, setTargetGwa] = useState("");
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [tempTarget, setTempTarget] = useState(targetGwa);
   
@@ -474,7 +485,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const saveTarget = () => {
     const num = parseFloat(tempTarget);
     if (!isNaN(num) && num > 0) setTargetGwa(num.toFixed(2));
-    else setTempTarget(targetGwa);
+    else setTargetGwa("");
     setIsEditingTarget(false);
   };
 
@@ -528,6 +539,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   };
 
   const cumulativeNum = parseFloat(analytics.cumulative);
+  const numericTarget = parseFloat(targetGwa);
   const isDeansLister = cumulativeNum > 0 && cumulativeNum <= 1.75;
 
   // Dynamic Theme Classes
@@ -565,6 +577,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 <p className={`text-[10px] font-bold uppercase ${textSubHeading}`}>Student</p>
               </div>
               
+              {/* Profile Avatar Trigger */}
               <div 
                 className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold border-2 border-white shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all hover:scale-105" 
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -572,6 +585,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 {userInitials}
               </div>
 
+              {/* Profile Dropdown */}
               {isProfileMenuOpen && (
                 <div className={`absolute top-14 right-0 w-64 rounded-2xl shadow-2xl border p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                   <div className={`p-3 border-b mb-2 sm:hidden ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
@@ -795,7 +809,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                         ))}
 
                         {/* Target Line (No text) */}
-                        {parseFloat(targetGwa) > 0 && (
+                        {parseFloat(targetGwa) > 0 && !isNaN(parseFloat(targetGwa)) && (
                           <div className="absolute left-0 right-0 border-t-2 border-dashed border-emerald-400/60 z-0 pointer-events-none flex justify-end pr-1" style={{ bottom: `${((5.0 - parseFloat(targetGwa)) / 4.0) * 100}%` }}></div>
                         )}
 
@@ -839,23 +853,23 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                  `}} />
               </div>
 
-              <div className={`col-span-1 rounded-[20px] p-5 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 flex flex-col justify-center ${cardBg}`}>
+              <div className={`col-span-2 lg:col-span-1 rounded-[20px] p-5 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 flex flex-col justify-center ${cardBg}`}>
                 <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${textSubHeading}`}>Global Target GWA</p>
                 <div className="flex items-center gap-2">
                   {isEditingTarget ? (
                     <input autoFocus type="number" step="0.05" value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => e.key === 'Enter' && saveTarget()} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
                   ) : (
                     <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
-                      <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa}</span>
+                      <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
                       <svg className={`w-4 h-4 transition-colors ${isDark ? 'text-slate-600 group-hover:text-indigo-400' : 'text-slate-300 group-hover:text-indigo-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     </button>
                   )}
                 </div>
-                {cumulativeNum > 0 && (
-                  <p className={`text-[11px] font-semibold mt-2 px-2 py-1 rounded inline-block border ${cumulativeNum <= parseFloat(targetGwa) ? (isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-600 border-emerald-100') : (isDark ? 'bg-amber-900/30 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-600 border-amber-100')}`}>
-                    {cumulativeNum <= parseFloat(targetGwa) 
-                      ? `✓ You are ${(parseFloat(targetGwa) - cumulativeNum).toFixed(2)} ahead of target!` 
-                      : `⚠ You need ${(cumulativeNum - parseFloat(targetGwa)).toFixed(2)} to reach target.`}
+                {cumulativeNum > 0 && !isNaN(numericTarget) && (
+                  <p className={`text-[11px] font-semibold mt-2 px-2 py-1 rounded inline-block border ${cumulativeNum <= numericTarget ? (isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-600 border-emerald-100') : (isDark ? 'bg-amber-900/30 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-600 border-amber-100')}`}>
+                    {cumulativeNum <= numericTarget 
+                      ? `✓ You are ${(numericTarget - cumulativeNum).toFixed(2)} ahead of target!` 
+                      : `⚠ You need ${(cumulativeNum - numericTarget).toFixed(2)} to reach target.`}
                   </p>
                 )}
               </div>
