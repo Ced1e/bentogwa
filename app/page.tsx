@@ -92,7 +92,10 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                <div className="w-2.5 h-2.5 bg-indigo-500 rounded-[2px]"></div>
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">BentoGWA</h1>
+              <div className="flex items-baseline gap-2">
+                <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">BentoGWA</h1>
+                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-100/50 border border-indigo-100 px-1.5 py-0.5 rounded-md hidden sm:inline-block">by Ced1e</span>
+              </div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Guest Dashboard</p>
             </div>
           </div>
