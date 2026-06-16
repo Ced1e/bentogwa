@@ -118,7 +118,7 @@ function ForgotPasswordView({ setView }: { setView: (v: any) => void }) {
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </span>
-                <input required value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="student@university.edu" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
+                <input required value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="student@university.edu" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
               </div>
             </div>
 
@@ -221,7 +221,7 @@ function ResetPasswordView({ setView, token }: { setView: (v: any) => void, toke
                   <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </span>
-                  <input required value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
+                  <input required value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
                     {showPassword ? (
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
@@ -372,13 +372,13 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                     {subjects.map((subject, index) => (
                       <div key={subject.id} className="grid grid-cols-12 gap-3 items-center group animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div className="col-span-6 relative">
-                          <input type="text" placeholder={`Subject ${index + 1}`} value={subject.name} onChange={(e) => updateSubject(subject.id, "name", e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium placeholder:text-slate-300 hover:border-indigo-200" />
+                          <input type="text" placeholder={`Subject ${index + 1}`} value={subject.name} onChange={(e) => updateSubject(subject.id, "name", e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium placeholder:text-slate-300 hover:border-indigo-200" />
                         </div>
                         <div className="col-span-3">
-                          <input type="number" min="0" step="0.25" placeholder="0.0" value={subject.grade} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "grade", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" />
+                          <input type="number" min="0" step="0.25" placeholder="0.0" value={subject.grade} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "grade", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" />
                         </div>
                         <div className="col-span-2 md:col-span-3">
-                          <input type="number" min="0" placeholder="0" value={subject.units} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "units", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" />
+                          <input type="number" min="0" placeholder="0" value={subject.units} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "units", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" />
                         </div>
                         <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => removeSubject(subject.id)} className="text-slate-300 hover:text-rose-500 transition-transform hover:scale-125">
@@ -550,7 +550,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
                     <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                     </span>
-                    <input required name="name" value={formData.name} onChange={handleInputChange} type="text" placeholder="e.g., John Doe" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
+                    <input required name="name" value={formData.name} onChange={handleInputChange} type="text" placeholder="e.g., John Doe" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                   </div>
                 </div>
                 <div>
@@ -559,7 +559,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
                     <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
                     </span>
-                    <input name="course" value={formData.course} onChange={handleInputChange} type="text" placeholder="e.g., BSIT" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
+                    <input name="course" value={formData.course} onChange={handleInputChange} type="text" placeholder="e.g., BSIT" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                   </div>
                 </div>
               </>
@@ -571,7 +571,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </span>
-                <input required name="email" value={formData.email} onChange={handleInputChange} type="email" placeholder="student@university.edu" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
+                <input required name="email" value={formData.email} onChange={handleInputChange} type="email" placeholder="student@university.edu" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
               </div>
             </div>
 
@@ -581,7 +581,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 </span>
-                <input required name="password" value={formData.password} onChange={handleInputChange} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
+                <input required name="password" value={formData.password} onChange={handleInputChange} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
@@ -872,7 +872,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 <p className={`text-[10px] font-bold uppercase ${textSubHeading}`}>{profile.course}</p>
               </div>
               
-              {/* Profile Avatar Trigger */}
               <div 
                 className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold border-2 border-white shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all hover:scale-105" 
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -880,7 +879,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 {userInitials}
               </div>
 
-              {/* Profile Dropdown */}
               {isProfileMenuOpen && (
                 <div className={`absolute top-14 right-0 w-64 rounded-2xl shadow-2xl border p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                   <div className={`p-3 border-b mb-2 sm:hidden ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
@@ -964,7 +962,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                       }}>
                         <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 flex-1 min-w-0 pr-2 md:pr-4">
                           {editingSemesterId === sem.id ? (
-                             <input autoFocus type="text" value={sem.name} onChange={(e) => setSemesters(semesters.map(s => s.id === sem.id ? { ...s, name: e.target.value } : s))} className={`text-sm font-bold border-b outline-none px-1 py-0.5 w-full max-w-[200px] ${isDark ? 'bg-slate-900 border-indigo-500 text-white' : 'bg-indigo-50 border-indigo-300 text-slate-900'}`} onClick={(e) => e.stopPropagation()} />
+                             <input autoFocus type="text" value={sem.name} onChange={(e) => setSemesters(semesters.map(s => s.id === sem.id ? { ...s, name: e.target.value } : s))} className={`text-[16px] md:text-sm font-bold border-b outline-none px-1 py-0.5 w-full max-w-[200px] ${isDark ? 'bg-slate-900 border-indigo-500 text-white' : 'bg-indigo-50 border-indigo-300 text-slate-900'}`} onClick={(e) => e.stopPropagation()} />
                           ) : (
                             <p className={`text-sm font-bold truncate group-hover:text-indigo-500 transition-colors ${textHeading}`}>{sem.name}</p>
                           )}
@@ -1013,9 +1011,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                 <div className="space-y-2">
                                    {sem.subjects.map((sub: any, idx: number) => (
                                      <div key={sub.id} className="grid grid-cols-12 gap-2 items-center group">
-                                       <div className="col-span-6"><input type="text" placeholder={`Subj ${idx+1}`} value={sub.name} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'name', e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-colors ${inputBg}`} /></div>
-                                       <div className="col-span-3"><input type="number" min="0" step="0.25" placeholder="0.0" value={sub.grade} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'grade', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} /></div>
-                                       <div className="col-span-2"><input type="number" min="0" placeholder="0" value={sub.units} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'units', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-sm outline-none transition-colors tabular-nums ${inputBg}`} /></div>
+                                       <div className="col-span-6"><input type="text" placeholder={`Subj ${idx+1}`} value={sub.name} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'name', e.target.value)} className={`w-full rounded-lg px-3 py-2 text-[16px] md:text-sm outline-none transition-colors ${inputBg}`} /></div>
+                                       <div className="col-span-3"><input type="number" min="0" step="0.25" placeholder="0.0" value={sub.grade} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'grade', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} /></div>
+                                       <div className="col-span-2"><input type="number" min="0" placeholder="0" value={sub.units} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'units', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums ${inputBg}`} /></div>
                                        <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => removeEditingSubject(sem.id, sub.id)} className="text-slate-400 hover:text-rose-500 hover:scale-125 transition-transform"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
                                      </div>
                                    ))}
@@ -1217,15 +1215,15 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
             <div className="space-y-4 mb-6">
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>Full Name</label>
-                <input type="text" value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-sm outline-none transition-all ${inputBg}`} />
+                <input type="text" value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
               </div>
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>Course / Program</label>
-                <input type="text" value={profile.course} onChange={(e) => setProfile({...profile, course: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-sm outline-none transition-all ${inputBg}`} />
+                <input type="text" value={profile.course} onChange={(e) => setProfile({...profile, course: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
               </div>
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>University</label>
-                <input type="text" value={profile.university} onChange={(e) => setProfile({...profile, university: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-sm outline-none transition-all ${inputBg}`} />
+                <input type="text" value={profile.university} onChange={(e) => setProfile({...profile, university: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
               </div>
             </div>
 
