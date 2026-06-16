@@ -73,6 +73,13 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
   const numericTarget = parseFloat(targetGwa);
   const isOnTrack = numericGwa > 0 && !isNaN(numericTarget) && numericGwa <= numericTarget;
 
+  // Keypress preventer for number inputs
+  const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   let gwaConfig = { gradient: "from-slate-400 to-slate-600", text: "text-slate-800", bg: "bg-slate-100", dot: "bg-slate-400", message: "Awaiting input" };
   if (numericGwa > 0) {
     if (numericGwa <= 1.50) gwaConfig = { gradient: "from-emerald-400 to-teal-500", text: "text-emerald-700", bg: "bg-emerald-50", dot: "bg-emerald-500", message: "Excellent Standing" };
@@ -92,9 +99,9 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                <div className="w-2.5 h-2.5 bg-indigo-500 rounded-[2px]"></div>
             </div>
             <div>
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">BentoGWA</h1>
-                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-100/50 border border-indigo-100 px-1.5 py-0.5 rounded-md hidden sm:inline-block">by Ced1e</span>
+                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-100/50 border border-indigo-100 px-1.5 py-0.5 rounded-md inline-block">by Ced1e</span>
               </div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Guest Dashboard</p>
             </div>
@@ -142,10 +149,10 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                           <input type="text" placeholder={`Subject ${index + 1}`} value={subject.name} onChange={(e) => updateSubject(subject.id, "name", e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium placeholder:text-slate-300 hover:border-indigo-200" />
                         </div>
                         <div className="col-span-3">
-                          <input type="number" step="0.25" placeholder="0.0" value={subject.grade} onChange={(e) => updateSubject(subject.id, "grade", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" />
+                          <input type="number" min="0" step="0.25" placeholder="0.0" value={subject.grade} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "grade", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" />
                         </div>
                         <div className="col-span-2 md:col-span-3">
-                          <input type="number" placeholder="0" value={subject.units} onChange={(e) => updateSubject(subject.id, "units", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" />
+                          <input type="number" min="0" placeholder="0" value={subject.units} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "units", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" />
                         </div>
                         <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => removeSubject(subject.id)} className="text-slate-300 hover:text-rose-500 transition-transform hover:scale-125">
@@ -175,7 +182,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
               </div>
               <div className="flex items-center gap-3 mt-1">
                 {isEditingTarget ? (
-                  <input autoFocus type="number" step="0.05" value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => e.key === 'Enter' && saveTarget()} className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" />
+                  <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => { blockInvalidChars(e); e.key === 'Enter' && saveTarget(); }} className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" />
                 ) : (
                   <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
                     <span className="text-3xl font-black text-slate-800 tabular-nums">{targetGwa || "--"}</span>
@@ -193,22 +200,22 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
             <div className="col-span-1 bg-white rounded-[20px] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 border border-slate-200/60 flex flex-col justify-center">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Insights</p>
               <div className="space-y-4">
-                <div className="flex items-start gap-2 group">
-                  <div className="mt-0.5 text-emerald-500 group-hover:-translate-y-1 transition-transform">
+                <div className="flex items-start gap-2 group min-w-0">
+                  <div className="mt-0.5 text-emerald-500 group-hover:-translate-y-1 transition-transform shrink-0">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Strongest</p>
-                    <p className="text-sm font-bold text-slate-800 truncate">{bestSubject ? `${bestSubject.name || 'Unnamed'} (${bestSubject.grade})` : "—"}</p>
+                    <p className="text-sm font-bold text-slate-800 truncate" title={bestSubject ? `${bestSubject.name} (${bestSubject.grade})` : ""}>{bestSubject ? `${bestSubject.name || 'Unnamed'} (${bestSubject.grade})` : "—"}</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-2 group">
-                  <div className="mt-0.5 text-rose-500 group-hover:translate-y-1 transition-transform">
+                <div className="flex items-start gap-2 group min-w-0">
+                  <div className="mt-0.5 text-rose-500 group-hover:translate-y-1 transition-transform shrink-0">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Needs Focus</p>
-                    <p className="text-sm font-bold text-slate-800 truncate">{worstSubject ? `${worstSubject.name || 'Unnamed'} (${worstSubject.grade})` : "—"}</p>
+                    <p className="text-sm font-bold text-slate-800 truncate" title={worstSubject ? `${worstSubject.name} (${worstSubject.grade})` : ""}>{worstSubject ? `${worstSubject.name || 'Unnamed'} (${worstSubject.grade})` : "—"}</p>
                   </div>
                 </div>
               </div>
@@ -538,6 +545,13 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     setView('guest');
   };
 
+  // Keypress preventer for number inputs
+  const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const cumulativeNum = parseFloat(analytics.cumulative);
   const numericTarget = parseFloat(targetGwa);
   const isDeansLister = cumulativeNum > 0 && cumulativeNum <= 1.75;
@@ -564,7 +578,10 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                  <div className="w-2.5 h-2.5 border-2 border-white/70 rounded-[2px]"></div>
                  <div className="w-2.5 h-2.5 bg-indigo-300 rounded-[2px]"></div>
               </div>
-              <h1 className={`text-2xl font-black tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>BentoGWA</h1>
+              <div className="flex items-center gap-2">
+                <h1 className={`text-2xl font-black tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>BentoGWA</h1>
+                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-100/50 border border-indigo-100 px-1.5 py-0.5 rounded-md inline-block">by Ced1e</span>
+              </div>
             </div>
             
             <div className="flex items-center gap-4 relative">
@@ -719,8 +736,8 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                    {sem.subjects.map((sub: any, idx: number) => (
                                      <div key={sub.id} className="grid grid-cols-12 gap-2 items-center group">
                                        <div className="col-span-6"><input type="text" placeholder={`Subj ${idx+1}`} value={sub.name} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'name', e.target.value)} className={`w-full rounded-lg px-3 py-2 text-sm outline-none transition-colors ${inputBg}`} /></div>
-                                       <div className="col-span-3"><input type="number" step="0.25" placeholder="0.0" value={sub.grade} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'grade', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} /></div>
-                                       <div className="col-span-2"><input type="number" placeholder="0" value={sub.units} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'units', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-sm outline-none transition-colors tabular-nums ${inputBg}`} /></div>
+                                       <div className="col-span-3"><input type="number" min="0" step="0.25" placeholder="0.0" value={sub.grade} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'grade', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} /></div>
+                                       <div className="col-span-2"><input type="number" min="0" placeholder="0" value={sub.units} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'units', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-sm outline-none transition-colors tabular-nums ${inputBg}`} /></div>
                                        <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => removeEditingSubject(sem.id, sub.id)} className="text-slate-400 hover:text-rose-500 hover:scale-125 transition-transform"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
                                      </div>
                                    ))}
@@ -857,7 +874,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${textSubHeading}`}>Global Target GWA</p>
                 <div className="flex items-center gap-2">
                   {isEditingTarget ? (
-                    <input autoFocus type="number" step="0.05" value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => e.key === 'Enter' && saveTarget()} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
+                    <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => { blockInvalidChars(e); e.key === 'Enter' && saveTarget(); }} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
                   ) : (
                     <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
                       <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
@@ -876,25 +893,25 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
 
               <div className="grid grid-cols-2 gap-4 col-span-2 lg:col-span-1">
                  {/* Box 1: Best Subject */}
-                 <div className={`rounded-[20px] p-5 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col justify-between ${cardBg}`}>
-                    <div>
+                 <div className={`rounded-[20px] p-5 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col justify-between overflow-hidden ${cardBg}`}>
+                    <div className="min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="text-emerald-500"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg></div>
+                        <div className="text-emerald-500 shrink-0"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg></div>
                         <p className={`text-[10px] font-bold uppercase tracking-wider ${textSubHeading}`}>Top Subject</p>
                       </div>
-                      <p className={`text-lg font-black truncate leading-tight ${textHeading}`}>{analytics.bestSubject?.name || "—"}</p>
+                      <p className={`text-lg font-black truncate leading-tight w-full ${textHeading}`} title={analytics.bestSubject?.name || ""}>{analytics.bestSubject?.name || "—"}</p>
                     </div>
                     <p className="text-sm font-bold text-emerald-500 mt-2">{analytics.bestSubject?.grade || "—"}</p>
                  </div>
                  
                  {/* Box 2: Worst Subject */}
-                 <div className={`rounded-[20px] p-5 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col justify-between ${cardBg}`}>
-                    <div>
+                 <div className={`rounded-[20px] p-5 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col justify-between overflow-hidden ${cardBg}`}>
+                    <div className="min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="text-rose-500"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7-7m0 0l-7-7m7 7V3" /></svg></div>
+                        <div className="text-rose-500 shrink-0"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7-7m0 0l-7-7m7 7V3" /></svg></div>
                         <p className={`text-[10px] font-bold uppercase tracking-wider ${textSubHeading}`}>Needs Focus</p>
                       </div>
-                      <p className={`text-lg font-black truncate leading-tight ${textHeading}`}>{analytics.worstSubject?.name || "—"}</p>
+                      <p className={`text-lg font-black truncate leading-tight w-full ${textHeading}`} title={analytics.worstSubject?.name || ""}>{analytics.worstSubject?.name || "—"}</p>
                     </div>
                     <p className="text-sm font-bold text-rose-500 mt-2">{analytics.worstSubject?.grade || "—"}</p>
                  </div>
