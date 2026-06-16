@@ -1394,21 +1394,44 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       */}
       <div 
   id="pdf-report-content" 
-  style={{ display: "none", position: "fixed", top: 0, left: 0, width: "800px", padding: "40px", background: "white", color: "black" }}
+  style={{ 
+    display: "none", 
+    position: "fixed", 
+    top: 0, 
+    left: 0, 
+    width: "800px", 
+    padding: "40px", 
+    background: "#ffffff", // Standard Hex
+    color: "#000000"       // Standard Hex
+  }}
 >
-        <div className="border-b-2 border-black pb-4 mb-8">
-          <h1 className="text-2xl font-black mb-1">Official Grade Report</h1>
-          <div className="flex justify-between items-end">
-            <div>
-              <p className="text-lg font-bold">{profile.name}</p>
-              <p className="text-sm">{profile.course} | {profile.university}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-bold">Cumulative GWA: {cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
-              <p className="text-sm">Total Earned Units: {analytics.totalUnits}</p>
-            </div>
-          </div>
-        </div>
+  <div style={{ borderBottom: "2px solid #000000", paddingBottom: "16px", marginBottom: "32px" }}>
+    <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "4px" }}>Official Grade Report</h1>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+      <div>
+        <p style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>{profile.name}</p>
+        <p style={{ fontSize: "14px", margin: 0 }}>{profile.course} | {profile.university}</p>
+      </div>
+      <div style={{ textAlign: "right" }}>
+        <p style={{ fontSize: "14px", fontWeight: "bold", margin: 0 }}>Cumulative GWA: {cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
+        <p style={{ fontSize: "14px", margin: 0 }}>Total Earned Units: {analytics.totalUnits}</p>
+      </div>
+    </div>
+  </div>
+
+  {/* ... repeat this style-overriding pattern for your tables and text ... */}
+  
+  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+    <thead>
+      <tr style={{ background: "#f8fafc" }}>
+        <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>Subject</th>
+        <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>Grade</th>
+        <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>Units</th>
+      </tr>
+    </thead>
+    {/* ... etc ... */}
+  </table>
+</div>
 
         <div className="space-y-8">
           {analytics.processedSemesters
