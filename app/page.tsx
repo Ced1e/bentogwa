@@ -793,6 +793,24 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     } catch (err) {}
   };
 
+  const exportToPDF = async () => {
+  const input = document.getElementById("pdf-report-content");
+  if (!input) return;
+
+  const html2canvas = (await import("html2canvas")).default;
+  const jsPDF = (await import("jspdf")).default;
+
+  const canvas = await html2canvas(input, { scale: 2 });
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF("p", "mm", "a4");
+  const imgProps = pdf.getImageProperties(imgData);
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+  pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+  pdf.save("BentoGWA_Report.pdf");
+};
+
   const analytics = useMemo(() => {
     let totalUnits = 0; let totalPoints = 0; let allSubjects: any[] = [];
     const processedSemesters = semesters.map(sem => {
@@ -866,9 +884,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     setIsExportModalOpen(true);
   };
   const handleExportPDF = () => {
-    setIsExportModalOpen(false);
-    setTimeout(() => window.print(), 100);
-  };
+  setIsExportModalOpen(false);
+  exportToPDF();
+};
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -1355,7 +1373,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
         PRINT-ONLY LAYOUT (Hidden on screen)
         ========================================
       */}
-      <div className="hidden print:block p-8 bg-white text-black font-sans max-w-4xl mx-auto">
+      <div id="pdf-report-content" className="hidden print:block ...">
         <div className="border-b-2 border-black pb-4 mb-8">
           <h1 className="text-2xl font-black mb-1">Official Grade Report</h1>
           <div className="flex justify-between items-end">
