@@ -1,20 +1,18 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Schema, models } from "mongoose";
 
-const UserSchema = new Schema(
+const userSchema = new Schema(
   {
-    name: { type: String, required: [true, "Name is required"] },
-    email: { 
-      type: String, 
-      unique: true, 
-      required: [true, "Email is required"],
-      match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Valid email required"],
-    },
-    password: { type: String, required: [true, "Password is required"], select: false },
-    course: { type: String, default: "" },
-    university: { type: String, default: "" }
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    course: { type: String },
+    university: { type: String },
+    // --- NEW FIELDS FOR PASSWORD RESET ---
+    resetToken: { type: String, required: false },
+    resetTokenExpiry: { type: Date, required: false },
   },
   { timestamps: true }
 );
 
-const User = models.User || model("User", UserSchema);
+const User = models.User || mongoose.model("User", userSchema);
 export default User;
