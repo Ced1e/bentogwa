@@ -1401,76 +1401,57 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     left: 0, 
     width: "800px", 
     padding: "40px", 
-    background: "#ffffff", // Standard Hex
-    color: "#000000"       // Standard Hex
+    background: "#ffffff", 
+    color: "#000000",
+    fontFamily: "Arial, sans-serif" 
   }}
 >
   <div style={{ borderBottom: "2px solid #000000", paddingBottom: "16px", marginBottom: "32px" }}>
-    <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "4px" }}>Official Grade Report</h1>
+    <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: "0 0 8px 0" }}>Official Grade Report</h1>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
       <div>
-        <p style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>{profile.name}</p>
-        <p style={{ fontSize: "14px", margin: 0 }}>{profile.course} | {profile.university}</p>
+        <p style={{ fontSize: "18px", fontWeight: "bold", margin: "0" }}>{profile.name}</p>
+        <p style={{ fontSize: "14px", margin: "4px 0 0 0" }}>{profile.course} | {profile.university}</p>
       </div>
       <div style={{ textAlign: "right" }}>
-        <p style={{ fontSize: "14px", fontWeight: "bold", margin: 0 }}>Cumulative GWA: {cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
-        <p style={{ fontSize: "14px", margin: 0 }}>Total Earned Units: {analytics.totalUnits}</p>
+        <p style={{ fontSize: "14px", fontWeight: "bold", margin: "0" }}>Cumulative GWA: {cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
+        <p style={{ fontSize: "14px", margin: "4px 0 0 0" }}>Total Earned Units: {analytics.totalUnits}</p>
       </div>
     </div>
   </div>
 
-  {/* ... repeat this style-overriding pattern for your tables and text ... */}
-  
-  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-    <thead>
-      <tr style={{ background: "#f8fafc" }}>
-        <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>Subject</th>
-        <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>Grade</th>
-        <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>Units</th>
-      </tr>
-    </thead>
-    {/* ... etc ... */}
-  </table>
-</div>
-
-        <div className="space-y-8">
-          {analytics.processedSemesters
-            .filter(sem => selectedExportSems.includes(sem.id))
-            .sort((a,b) => a.id - b.id)
-            .map(sem => (
-            <div key={sem.id} className="break-inside-avoid">
-              <div className="flex justify-between items-center bg-slate-100 p-2 border border-slate-300 font-bold mb-2">
-                <h3>{sem.name}</h3>
-                <span>Semester GWA: {parseFloat(sem.gwa).toFixed(2)}</span>
-              </div>
-              <table className="w-full text-sm border-collapse border border-slate-300">
-                <thead>
-                  <tr className="bg-slate-50">
-                    <th className="border border-slate-300 p-2 text-left w-1/2">Subject</th>
-                    <th className="border border-slate-300 p-2 text-center w-1/4">Grade</th>
-                    <th className="border border-slate-300 p-2 text-center w-1/4">Units</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sem.subjects.map((sub: any) => (
-                    <tr key={sub.id}>
-                      <td className="border border-slate-300 p-2">{sub.name || "Untitled"}</td>
-                      <td className="border border-slate-300 p-2 text-center">{sub.grade || "-"}</td>
-                      <td className="border border-slate-300 p-2 text-center">{sub.units || "-"}</td>
-                    </tr>
-                  ))}
-                  {sem.subjects.length === 0 && (
-                    <tr><td colSpan={3} className="border border-slate-300 p-4 text-center italic text-slate-500">No subjects recorded for this semester.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          ))}
-          {selectedExportSems.length === 0 && (
-            <p className="italic text-center mt-10">No semesters selected for export.</p>
-          )}
+  <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+    {analytics.processedSemesters
+      .filter(sem => selectedExportSems.includes(sem.id))
+      .sort((a,b) => a.id - b.id)
+      .map(sem => (
+      <div key={sem.id} style={{ breakInside: "avoid" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", backgroundColor: "#f1f5f9", padding: "8px", border: "1px solid #cbd5e1", fontWeight: "bold", marginBottom: "8px" }}>
+          <span style={{ fontSize: "16px" }}>{sem.name}</span>
+          <span style={{ fontSize: "16px" }}>Semester GWA: {parseFloat(sem.gwa).toFixed(2)}</span>
         </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
+          <thead>
+            <tr style={{ backgroundColor: "#f8fafc" }}>
+              <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>Subject</th>
+              <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>Grade</th>
+              <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>Units</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sem.subjects.map((sub: any) => (
+              <tr key={sub.id}>
+                <td style={{ border: "1px solid #cbd5e1", padding: "8px" }}>{sub.name || "Untitled"}</td>
+                <td style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>{sub.grade || "-"}</td>
+                <td style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>{sub.units || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </>
-  );
+    ))}
+  </div>
+</div>
+      </>
+    );
 }
