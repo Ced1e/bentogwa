@@ -1,5 +1,6 @@
 "use client";
-
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import { useState, useMemo, useEffect } from "react";
 import { signIn, useSession, signOut } from "next-auth/react";
 
@@ -795,20 +796,26 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
 
   const exportToPDF = async () => {
   const input = document.getElementById("pdf-report-content");
-  if (!input) return;
+  if (!input) {
+    console.error("PDF content element not found!");
+    return;
+  }
 
-  const html2canvas = (await import("html2canvas")).default;
-  const jsPDF = (await import("jspdf")).default;
+  try {
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-  const canvas = await html2canvas(input, { scale: 2 });
-  const imgData = canvas.toDataURL("image/png");
-  const pdf = new jsPDF("p", "mm", "a4");
-  const imgProps = pdf.getImageProperties(imgData);
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-  pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-  pdf.save("BentoGWA_Report.pdf");
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    pdf.save("BentoGWA_Report.pdf");
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    alert("There was an error generating your PDF. Please try again.");
+  }
 };
 
   const analytics = useMemo(() => {
@@ -1373,7 +1380,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
         PRINT-ONLY LAYOUT (Hidden on screen)
         ========================================
       */}
-      <div id="pdf-report-content" className="hidden print:block ...">
+      <div 
+  id="pdf-report-content" 
+  className="fixed top-0 left-[-9999px] p-8 bg-white text-black font-sans w-[800px]">
         <div className="border-b-2 border-black pb-4 mb-8">
           <h1 className="text-2xl font-black mb-1">Official Grade Report</h1>
           <div className="flex justify-between items-end">
