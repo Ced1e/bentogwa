@@ -872,6 +872,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 <p className={`text-[10px] font-bold uppercase ${textSubHeading}`}>{profile.course}</p>
               </div>
               
+              {/* Profile Avatar Trigger */}
               <div 
                 className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold border-2 border-white shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all hover:scale-105" 
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -879,6 +880,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 {userInitials}
               </div>
 
+              {/* Profile Dropdown */}
               {isProfileMenuOpen && (
                 <div className={`absolute top-14 right-0 w-64 rounded-2xl shadow-2xl border p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                   <div className={`p-3 border-b mb-2 sm:hidden ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
@@ -960,20 +962,20 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                            setExpandedSemesterId(sem.id);
                         }
                       }}>
-                        <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-6 w-full">
+                        <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 flex-1 min-w-0 pr-2 md:pr-4">
                           {editingSemesterId === sem.id ? (
-                             <input autoFocus type="text" value={sem.name} onChange={(e) => setSemesters(semesters.map(s => s.id === sem.id ? { ...s, name: e.target.value } : s))} className={`text-sm font-bold border-b outline-none px-1 py-0.5 w-48 ${isDark ? 'bg-slate-900 border-indigo-500 text-white' : 'bg-indigo-50 border-indigo-300 text-slate-900'}`} onClick={(e) => e.stopPropagation()} />
+                             <input autoFocus type="text" value={sem.name} onChange={(e) => setSemesters(semesters.map(s => s.id === sem.id ? { ...s, name: e.target.value } : s))} className={`text-sm font-bold border-b outline-none px-1 py-0.5 w-full max-w-[200px] ${isDark ? 'bg-slate-900 border-indigo-500 text-white' : 'bg-indigo-50 border-indigo-300 text-slate-900'}`} onClick={(e) => e.stopPropagation()} />
                           ) : (
-                            <p className={`text-sm font-bold w-48 truncate group-hover:text-indigo-500 transition-colors ${textHeading}`}>{sem.name}</p>
+                            <p className={`text-sm font-bold truncate group-hover:text-indigo-500 transition-colors ${textHeading}`}>{sem.name}</p>
                           )}
-                          <p className={`text-xs font-medium ${textMuted}`}>{sem.subjects.length} Subjects • {sem.units} Units</p>
+                          <p className={`text-xs font-medium whitespace-nowrap ${textMuted}`}>{sem.subjects.length} Subjects • {sem.units} Units</p>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
                            <span className={`text-xl font-black tabular-nums ${parseFloat(sem.gwa) <= 1.5 ? 'text-emerald-500' : parseFloat(sem.gwa) <= 2.5 ? 'text-amber-500' : 'text-rose-500'}`}>
                              {parseFloat(sem.gwa).toFixed(2)}
                            </span>
-                           <div className={`flex items-center gap-2 border-l pl-3 ml-1 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                           <div className={`flex items-center gap-1 md:gap-2 border-l pl-2 md:pl-3 ml-1 md:ml-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                              {expandedSemesterId === sem.id && editingSemesterId !== sem.id && (
                                <button onClick={(e) => { 
                                  e.stopPropagation(); 
@@ -982,15 +984,15 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                     return;
                                  }
                                  setEditingSemesterId(sem.id); 
-                               }} className={`p-1.5 rounded-md transition-colors ${isDark ? 'text-slate-400 hover:text-indigo-400 hover:bg-slate-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`} title="Edit Semester">
+                               }} className={`p-1 md:p-1.5 rounded-md transition-colors ${isDark ? 'text-slate-400 hover:text-indigo-400 hover:bg-slate-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`} title="Edit Semester">
                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                </button>
                              )}
-                             <button onClick={(e) => deleteSemester(e, sem.id)} className={`p-1.5 rounded-md transition-colors ${isDark ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800' : 'text-slate-400 hover:text-rose-500 hover:bg-rose-50'}`} title="Delete Semester">
+                             <button onClick={(e) => deleteSemester(e, sem.id)} className={`p-1 md:p-1.5 rounded-md transition-colors ${isDark ? 'text-slate-400 hover:text-rose-400 hover:bg-slate-800' : 'text-slate-400 hover:text-rose-500 hover:bg-rose-50'}`} title="Delete Semester">
                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                              </button>
                              <div className={`transition-transform duration-300 text-slate-400 ${expandedSemesterId === sem.id ? 'rotate-180' : ''}`}>
-                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                              </div>
                            </div>
                         </div>
