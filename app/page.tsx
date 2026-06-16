@@ -3,13 +3,48 @@
 import { useState, useMemo, useEffect } from "react";
 import { signIn, useSession, signOut } from "next-auth/react";
 
+// --- DYNAMIC GRADING SCALES ---
+const SCALE_CONFIGS = {
+  "PH_1_5": { 
+    name: "PH: 1.0 (Highest) - 5.0 (Lowest)", 
+    lowerIsBetter: true, 
+    deans: 1.75,
+    getYLabels: () => ["1.0", "2.0", "3.0", "4.0", "5.0"],
+    getHeight: (gwa: number) => gwa > 0 ? ((5.0 - gwa) / 4.0) * 100 : 0,
+    getColor: (gwa: number) => gwa <= 1.75 ? 'emerald' : gwa <= 3.0 ? 'amber' : 'rose'
+  },
+  "PH_4_1": { 
+    name: "PH: 4.0 (Highest) - 1.0 (Lowest)", 
+    lowerIsBetter: false, 
+    deans: 3.5,
+    getYLabels: () => ["4.0", "3.0", "2.0", "1.0", "0.0"],
+    getHeight: (gwa: number) => gwa > 0 ? (gwa / 4.0) * 100 : 0,
+    getColor: (gwa: number) => gwa >= 3.0 ? 'emerald' : gwa >= 2.0 ? 'amber' : 'rose'
+  },
+  "US_4_0": { 
+    name: "US: 4.0 (A) - 0.0 (F)", 
+    lowerIsBetter: false, 
+    deans: 3.5,
+    getYLabels: () => ["4.0", "3.0", "2.0", "1.0", "0.0"],
+    getHeight: (gwa: number) => gwa > 0 ? (gwa / 4.0) * 100 : 0,
+    getColor: (gwa: number) => gwa >= 3.0 ? 'emerald' : gwa >= 2.0 ? 'amber' : 'rose'
+  },
+  "PERCENT": { 
+    name: "Percentage: 100% - 65%", 
+    lowerIsBetter: false, 
+    deans: 90,
+    getYLabels: () => ["100", "90", "80", "75", "65"],
+    getHeight: (gwa: number) => gwa > 0 ? Math.max(0, ((gwa - 65) / 35) * 100) : 0,
+    getColor: (gwa: number) => gwa >= 90 ? 'emerald' : gwa >= 75 ? 'amber' : 'rose'
+  }
+};
+
 // --- MAIN APP ROUTER ---
 export default function App() {
   const { status } = useSession();
   const [currentView, setCurrentView] = useState<'guest' | 'login' | 'signup' | 'dashboard' | 'forgot-password' | 'reset-password'>('guest');
   const [resetToken, setResetToken] = useState("");
 
-  // Check URL for reset token on initial load
   useEffect(() => {
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
@@ -22,7 +57,6 @@ export default function App() {
     }
   }, []);
 
-  // Auto-route logged-in users directly to the dashboard
   useEffect(() => {
     if (status === "authenticated" && currentView !== 'dashboard') {
       setCurrentView('dashboard');
@@ -256,6 +290,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [tempTarget, setTempTarget] = useState(targetGwa);
   const [displayGwa, setDisplayGwa] = useState("0.0000");
+  const activeScale = SCALE_CONFIGS["PH_1_5"]; // Default for guests
 
   const addSubject = () => setSubjects([...subjects, { id: Date.now(), name: "", grade: "", units: "" }]);
   const updateSubject = (id: number, field: string, value: string) => setSubjects(subjects.map((sub) => (sub.id === id ? { ...sub, [field]: value } : sub)));
@@ -274,7 +309,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
       const g = parseFloat(sub.grade); const u = parseFloat(sub.units);
       if (!isNaN(g) && !isNaN(u) && u > 0) { units += u; points += g * u; if (sub.name) validSubjects.push({ ...sub, numGrade: g }); }
     });
-    validSubjects.sort((a, b) => a.numGrade - b.numGrade);
+    validSubjects.sort((a, b) => activeScale.lowerIsBetter ? a.numGrade - b.numGrade : b.numGrade - a.numGrade);
     return {
       totalUnits: units,
       gwa: units > 0 ? (points / units).toFixed(4) : "0.0000",
@@ -297,7 +332,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
 
   const numericGwa = parseFloat(gwa);
   const numericTarget = parseFloat(targetGwa);
-  const isOnTrack = numericGwa > 0 && !isNaN(numericTarget) && numericGwa <= numericTarget;
+  const isOnTrack = numericGwa > 0 && !isNaN(numericTarget) && (activeScale.lowerIsBetter ? numericGwa <= numericTarget : numericGwa >= numericTarget);
 
   const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
@@ -305,8 +340,9 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
 
   let gwaConfig = { gradient: "from-slate-400 to-slate-600", text: "text-slate-800", bg: "bg-slate-100", dot: "bg-slate-400", message: "Awaiting input" };
   if (numericGwa > 0) {
-    if (numericGwa <= 1.50) gwaConfig = { gradient: "from-emerald-400 to-teal-500", text: "text-emerald-700", bg: "bg-emerald-50", dot: "bg-emerald-500", message: "Excellent Standing" };
-    else if (numericGwa <= 2.25) gwaConfig = { gradient: "from-amber-400 to-orange-500", text: "text-amber-700", bg: "bg-amber-50", dot: "bg-amber-500", message: "Good Standing" };
+    const color = activeScale.getColor(numericGwa);
+    if (color === 'emerald') gwaConfig = { gradient: "from-emerald-400 to-teal-500", text: "text-emerald-700", bg: "bg-emerald-50", dot: "bg-emerald-500", message: "Excellent Standing" };
+    else if (color === 'amber') gwaConfig = { gradient: "from-amber-400 to-orange-500", text: "text-amber-700", bg: "bg-amber-50", dot: "bg-amber-500", message: "Good Standing" };
     else gwaConfig = { gradient: "from-rose-400 to-red-500", text: "text-rose-700", bg: "bg-rose-50", dot: "bg-rose-500", message: "Needs Improvement" };
   }
 
@@ -537,7 +573,6 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
           
           <form onSubmit={handleSubmit} className="space-y-4">
             
-            {/* --- NEW GOOGLE BUTTON --- */}
             <button 
               type="button" 
               onClick={() => signIn("google")} 
@@ -557,7 +592,6 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
               <span className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Or</span>
               <div className="flex-1 border-t border-slate-200"></div>
             </div>
-            {/* ------------------------- */}
 
             {errorMsg && <div className="bg-rose-50 text-rose-600 text-sm font-bold p-3 rounded-lg border border-rose-200 animate-in fade-in">{errorMsg}</div>}
 
@@ -657,8 +691,12 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const [profile, setProfile] = useState({
     name: sessionName,
     course: "Loading...",
-    university: "Loading..."
+    university: "Loading...",
+    gradingScale: "PH_1_5" // NEW STATE
   });
+
+  // Calculate the active scale for rendering logic
+  const activeScale = SCALE_CONFIGS[profile.gradingScale as keyof typeof SCALE_CONFIGS] || SCALE_CONFIGS["PH_1_5"];
 
   const [targetGwa, setTargetGwa] = useState("");
   const [isEditingTarget, setIsEditingTarget] = useState(false);
@@ -698,7 +736,8 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
             setProfile({
               name: data.name,
               course: data.course || "N/A",
-              university: data.university || "N/A"
+              university: data.university || "N/A",
+              gradingScale: data.gradingScale || "PH_1_5"
             });
           }
         })
@@ -720,10 +759,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
             }));
             setSemesters(formatted);
           }
-          setIsLoadingData(false);
-        })
-        .catch(err => {
-          console.error("Failed to load semesters:", err);
           setIsLoadingData(false);
         });
     }
@@ -755,9 +790,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ semestersData: currentSemesters })
       });
-    } catch (err) {
-      console.error("Sync failed", err);
-    }
+    } catch (err) {}
   };
 
   const analytics = useMemo(() => {
@@ -774,7 +807,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       return { ...sem, gwa: semUnits > 0 ? (semPoints / semUnits).toFixed(4) : "0.0000", units: semUnits };
     });
 
-    allSubjects.sort((a, b) => a.numGrade - b.numGrade);
+    // DYNAMIC SORTING
+    allSubjects.sort((a, b) => activeScale.lowerIsBetter ? a.numGrade - b.numGrade : b.numGrade - a.numGrade);
+    
     const cumulative = totalUnits > 0 ? (totalPoints / totalUnits).toFixed(4) : "0.0000";
 
     return {
@@ -782,7 +817,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       bestSubject: allSubjects.length > 0 ? allSubjects[0] : null,
       worstSubject: allSubjects.length > 1 ? allSubjects[allSubjects.length - 1] : null,
     };
-  }, [semesters]);
+  }, [semesters, activeScale]);
 
   const saveTarget = () => {
     const num = parseFloat(tempTarget);
@@ -846,7 +881,11 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
 
   const cumulativeNum = parseFloat(analytics.cumulative);
   const numericTarget = parseFloat(targetGwa);
-  const isDeansLister = cumulativeNum > 0 && cumulativeNum <= 1.75;
+  
+  // DYNAMIC TARGET & DEANS LISTER LOGIC
+  const isOnTrack = activeScale.lowerIsBetter ? cumulativeNum <= numericTarget : cumulativeNum >= numericTarget;
+  const isDeansLister = cumulativeNum > 0 && (activeScale.lowerIsBetter ? cumulativeNum <= activeScale.deans : cumulativeNum >= activeScale.deans);
+  const targetDiff = Math.abs(numericTarget - cumulativeNum).toFixed(2);
 
   const isDark = themeMode === "Dark";
   const mainBg = isDark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-900";
@@ -951,7 +990,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                   </button>
                 </div>
                 
-                {/* ACCORDION LIST */}
                 <div className="flex flex-col space-y-3">
                   {isLoadingData ? (
                      <div className={`p-8 text-center rounded-[20px] border ${cardBg}`}>
@@ -962,7 +1000,11 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                      <div className={`p-8 text-center rounded-[20px] border border-dashed ${cardBg}`}>
                         <p className={`text-sm ${textMuted}`}>No semesters added yet. Start tracking your progress!</p>
                      </div>
-                  ) : analytics.processedSemesters.map((sem) => (
+                  ) : analytics.processedSemesters.map((sem) => {
+                    const gradeColor = activeScale.getColor(parseFloat(sem.gwa));
+                    const textGradeColor = gradeColor === 'emerald' ? 'text-emerald-500' : gradeColor === 'amber' ? 'text-amber-500' : 'text-rose-500';
+
+                    return (
                     <div key={sem.id} className={`rounded-[20px] transition-all duration-300 border overflow-hidden ${cardBg} ${expandedSemesterId === sem.id ? `ring-2 ${isDark ? 'border-indigo-600 ring-indigo-900' : 'border-indigo-400 ring-indigo-50'}` : `hover:shadow-md hover:-translate-y-0.5`}`}>
                       
                       <div className={`flex justify-between items-center p-4 md:p-5 cursor-pointer group ${expandedSemesterId === sem.id && !isDark ? 'bg-slate-50' : ''} ${expandedSemesterId === sem.id && isDark ? 'bg-slate-800/50' : ''}`} onClick={() => {
@@ -983,7 +1025,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                           <span className={`text-xl font-black tabular-nums ${parseFloat(sem.gwa) <= 1.5 ? 'text-emerald-500' : parseFloat(sem.gwa) <= 2.5 ? 'text-amber-500' : 'text-rose-500'}`}>
+                           <span className={`text-xl font-black tabular-nums ${textGradeColor}`}>
                              {parseFloat(sem.gwa).toFixed(2)}
                            </span>
                            <div className={`flex items-center gap-1 md:gap-2 border-l pl-2 md:pl-3 ml-1 md:ml-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
@@ -1009,12 +1051,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                         </div>
                       </div>
 
-                      {/* Expanded View */}
                       {expandedSemesterId === sem.id && (
                          <div className={`p-4 md:p-5 border-t animate-in fade-in slide-in-from-top-2 duration-200 ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
-                            
                             {editingSemesterId === sem.id ? (
-                               // EDIT MODE
                                <>
                                 <div className="grid grid-cols-12 gap-2 mb-2 px-1">
                                   <div className={`col-span-6 text-[10px] font-bold uppercase tracking-wider ${textSubHeading}`}>Subject</div>
@@ -1036,7 +1075,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                                      Add Subject Row
                                    </button>
-                                   
                                    {isCreatingSemesterId === sem.id ? (
                                       <div className="flex gap-2 w-full sm:w-auto">
                                         <button onClick={() => {
@@ -1060,7 +1098,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                 </div>
                                </>
                             ) : (
-                               // READ-ONLY MODE
                                <div className="w-full overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800">
                                   <table className="w-full text-sm text-left">
                                     <thead className={`text-[10px] uppercase tracking-wider ${isDark ? 'bg-slate-800/50 text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
@@ -1085,51 +1122,48 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                          </div>
                       )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             </div>
 
+            {/* --- DYNAMIC GRAPH RENDERER --- */}
             <div className="lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-4 lg:gap-6">
-              
               <div className={`col-span-2 lg:col-span-1 rounded-[20px] p-6 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 ${cardBg}`}>
-                 <p className={`text-xs font-bold uppercase tracking-wider mb-8 ${textSubHeading}`}>Academic Trend</p>
+                 <div className="flex justify-between items-start mb-8">
+                   <p className={`text-xs font-bold uppercase tracking-wider ${textSubHeading}`}>Academic Trend</p>
+                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${isDark ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                     {activeScale.name.split(':')[0]} Scale
+                   </span>
+                 </div>
                  
                  <div className="flex h-56 w-full mt-4">
-                   {/* Y-Axis Grid (Fixed) */}
                    <div className="flex flex-col justify-between h-full pr-3 pb-[1.4rem] text-[9px] font-bold text-slate-400 text-right shrink-0 z-10">
-                     <span>1.00</span>
-                     <span>2.00</span>
-                     <span>3.00</span>
-                     <span>4.00</span>
-                     <span>5.00</span>
+                     {activeScale.getYLabels().map((label, i) => <span key={i}>{label}</span>)}
                    </div>
 
-                   {/* Scrollable Graph Area */}
                    <div className="relative flex-grow overflow-x-auto overflow-y-hidden hide-scrollbar custom-scrollbar pt-8 pb-10">
                      <div className={`relative min-w-full flex items-end justify-start gap-6 pb-0 h-full border-l border-b px-6 ${isDark ? 'border-slate-700' : 'border-slate-200'}`} style={{ minWidth: `${Math.max(100, analytics.processedSemesters.length * 20)}%` }}>
                         
-                        {/* Static Grid Lines */}
                         {[25, 50, 75].map(pct => (
                           <div key={pct} className={`absolute left-0 right-0 border-t z-0 ${isDark ? 'border-slate-800' : 'border-slate-100'}`} style={{ bottom: `${pct}%` }}></div>
                         ))}
 
-                        {/* Target Line (No text) */}
                         {parseFloat(targetGwa) > 0 && !isNaN(parseFloat(targetGwa)) && (
-                          <div className="absolute left-0 right-0 border-t-2 border-dashed border-emerald-400/60 z-0 pointer-events-none flex justify-end pr-1" style={{ bottom: `${((5.0 - parseFloat(targetGwa)) / 4.0) * 100}%` }}></div>
+                          <div className="absolute left-0 right-0 border-t-2 border-dashed border-emerald-400/60 z-0 pointer-events-none flex justify-end pr-1" style={{ bottom: `${activeScale.getHeight(parseFloat(targetGwa))}%` }}></div>
                         )}
 
-                        {/* Interactive Bars - Sorted oldest first */}
                         {[...analytics.processedSemesters].sort((a,b) => a.id - b.id).map((sem) => {
                            const gwaNum = parseFloat(sem.gwa);
-                           const heightPct = gwaNum > 0 ? ((5.0 - gwaNum) / 4.0) * 100 : 0;
+                           const heightPct = activeScale.getHeight(gwaNum);
+                           const gradeColor = activeScale.getColor(gwaNum);
                            
                            let barColor = "bg-emerald-400 group-hover:bg-emerald-500 dark:bg-emerald-500/80";
                            let toolTipColor = isDark ? "text-emerald-400" : "text-emerald-600";
-                           if (gwaNum > 1.75 && gwaNum <= 3.0) {
+                           if (gradeColor === 'amber') {
                                barColor = "bg-amber-400 group-hover:bg-amber-500 dark:bg-amber-500/80";
                                toolTipColor = isDark ? "text-amber-400" : "text-amber-600";
-                           } else if (gwaNum > 3.0) {
+                           } else if (gradeColor === 'rose') {
                                barColor = "bg-rose-400 group-hover:bg-rose-500 dark:bg-rose-500/80";
                                toolTipColor = isDark ? "text-rose-400" : "text-rose-600";
                            }
@@ -1160,7 +1194,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
               </div>
 
               <div className={`col-span-2 lg:col-span-1 rounded-[20px] p-5 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 flex flex-col justify-center ${cardBg}`}>
-                <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${textSubHeading}`}>Global Target GWA</p>
+                <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${textSubHeading}`}>Global Target</p>
                 <div className="flex items-center gap-2">
                   {isEditingTarget ? (
                     <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
@@ -1172,16 +1206,15 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                   )}
                 </div>
                 {cumulativeNum > 0 && !isNaN(numericTarget) && (
-                  <p className={`text-[11px] font-semibold mt-2 px-2 py-1 rounded inline-block border ${cumulativeNum <= numericTarget ? (isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-600 border-emerald-100') : (isDark ? 'bg-amber-900/30 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-600 border-amber-100')}`}>
-                    {cumulativeNum <= numericTarget 
-                      ? `✓ You are ${(numericTarget - cumulativeNum).toFixed(2)} ahead of target!` 
-                      : `⚠ You need ${(cumulativeNum - numericTarget).toFixed(2)} to reach target.`}
+                  <p className={`text-[11px] font-semibold mt-2 px-2 py-1 rounded inline-block border ${isOnTrack ? (isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-600 border-emerald-100') : (isDark ? 'bg-amber-900/30 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-600 border-amber-100')}`}>
+                    {isOnTrack 
+                      ? `✓ You are ${targetDiff} ahead of target!` 
+                      : `⚠ You need ${targetDiff} to reach target.`}
                   </p>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-4 col-span-2 lg:col-span-1">
-                 {/* Box 1: Best Subject */}
                  <div className={`rounded-[20px] p-5 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col justify-between overflow-hidden ${cardBg}`}>
                     <div className="min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-2">
@@ -1193,7 +1226,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                     <p className="text-sm font-bold text-emerald-500 mt-2">{analytics.bestSubject?.grade || "—"}</p>
                  </div>
                  
-                 {/* Box 2: Worst Subject */}
                  <div className={`rounded-[20px] p-5 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col justify-between overflow-hidden ${cardBg}`}>
                     <div className="min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-2">
@@ -1237,6 +1269,21 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>University</label>
                 <input type="text" value={profile.university} onChange={(e) => setProfile({...profile, university: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
+              </div>
+              
+              {/* --- NEW GRADING SCALE DROPDOWN --- */}
+              <div className="pt-2">
+                <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>Grading Scale</label>
+                <select 
+                  value={profile.gradingScale} 
+                  onChange={(e) => setProfile({...profile, gradingScale: e.target.value})} 
+                  className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all cursor-pointer ${inputBg}`}
+                >
+                  {Object.entries(SCALE_CONFIGS).map(([key, config]) => (
+                    <option key={key} value={key}>{config.name}</option>
+                  ))}
+                </select>
+                <p className={`text-[10px] mt-2 ${textMuted}`}>Changing this will automatically update your insights, charts, and target calculations to match your university's system.</p>
               </div>
             </div>
 

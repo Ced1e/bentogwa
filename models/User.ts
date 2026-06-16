@@ -7,7 +7,9 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     course: { type: String },
     university: { type: String },
-    // --- NEW FIELDS FOR PASSWORD RESET ---
+    // --- NEW FIELD FOR GRADING SCALE ---
+    gradingScale: { type: String, default: "PH_1_5" },
+    
     resetToken: { type: String, required: false },
     resetTokenExpiry: { type: Date, required: false },
   },
