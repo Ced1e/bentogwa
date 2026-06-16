@@ -1,14 +1,17 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
-const handler = NextAuth({
-  session: {
-    strategy: "jwt", // Uses secure JSON Web Tokens to keep users logged in
-  },
+const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -16,57 +19,60 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // 1. Check if they actually typed an email and password
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Missing email or password");
         }
-
-        // 2. Connect to MongoDB
         await connectToDatabase();
+        const user = await User.findOne({ email: credentials.email });
+        if (!user) throw new Error("No user found with this email");
 
-        // 3. Find the user. We use select("+password") because we hid it in the Schema!
-        const user = await User.findOne({ email: credentials.email }).select("+password");
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isValid) throw new Error("Invalid password");
 
-        if (!user) {
-          throw new Error("No account found with this email");
-        }
-
-        // 4. Compare the typed password with the hashed password in the database
-        const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isPasswordCorrect) {
-          throw new Error("Incorrect password");
-        }
-
-        // 5. If everything passes, return the user object to create the session
-        return { 
-          id: user._id.toString(), 
-          email: user.email, 
-          name: user.name 
-        };
+        return { id: user._id.toString(), name: user.name, email: user.email };
       }
     })
   ],
-  pages: {
-    signIn: "/", // If they are logged out, redirect them to the main page
-  },
   callbacks: {
-    // This attaches the user's name to the session token so we can display it on the dashboard
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        await connectToDatabase();
+        const existingUser = await User.findOne({ email: user.email });
+        
+        if (!existingUser) {
+          // Auto-create a MongoDB account for new Google users
+          const randomPassword = crypto.randomBytes(32).toString("hex");
+          const hashedPassword = await bcrypt.hash(randomPassword, 10);
+          
+          await User.create({
+            name: user.name,
+            email: user.email,
+            password: hashedPassword,
+            course: "BSIT",
+            university: "University of Southeastern Philippines",
+          });
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
-        token.name = user.name;
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token && session.user) {
-        session.user.name = token.name as string;
+      if (session.user) {
+        (session.user as any).id = token.id;
       }
       return session;
-    }
-  }
-});
+    },
+  },
+  session: { strategy: "jwt" },
+  secret: process.env.NEXTAUTH_SECRET,
+};
 
-// Next.js App Router requires both GET and POST exports for the handler
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
