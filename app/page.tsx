@@ -8,7 +8,6 @@ export default function App() {
   const { status } = useSession();
   const [currentView, setCurrentView] = useState<'guest' | 'login' | 'signup' | 'dashboard'>('guest');
 
-  // Auto-route logged-in users directly to the dashboard
   useEffect(() => {
     if (status === "authenticated" && currentView !== 'dashboard') {
       setCurrentView('dashboard');
@@ -73,11 +72,8 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
   const numericTarget = parseFloat(targetGwa);
   const isOnTrack = numericGwa > 0 && !isNaN(numericTarget) && numericGwa <= numericTarget;
 
-  // Keypress preventer for number inputs
   const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (['e', 'E', '+', '-'].includes(e.key)) {
-      e.preventDefault();
-    }
+    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
   };
 
   let gwaConfig = { gradient: "from-slate-400 to-slate-600", text: "text-slate-800", bg: "bg-slate-100", dot: "bg-slate-400", message: "Awaiting input" };
@@ -182,7 +178,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
               </div>
               <div className="flex items-center gap-3 mt-1">
                 {isEditingTarget ? (
-                  <input autoFocus type="number" min="0" step="0.05" value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => { blockInvalidChars(e); e.key === 'Enter' && saveTarget(); }} className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" />
+                  <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" />
                 ) : (
                   <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
                     <span className="text-3xl font-black text-slate-800 tabular-nums">{targetGwa || "--"}</span>
@@ -392,41 +388,57 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
 // VIEW 4: PREMIUM ACCOUNT DASHBOARD (CLOUD SYNCED)
 // ==========================================
 function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
-  const { data: session } = useSession();
-  const userName = session?.user?.name || "Student";
-  const userInitials = userName.includes(' ') 
-    ? `${userName.split(' ')[0][0]}${userName.split(' ')[1][0]}` 
-    : userName.substring(0, 2).toUpperCase();
+  const { data: session, update } = useSession();
+  
+  // Base name fallback before DB load
+  const sessionName = session?.user?.name || "Student";
+  const userInitials = sessionName.includes(' ') 
+    ? `${sessionName.split(' ')[0][0]}${sessionName.split(' ')[1][0]}` 
+    : sessionName.substring(0, 2).toUpperCase();
 
-  // Semesters start completely empty, pending cloud fetch
   const [semesters, setSemesters] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
+  // Real DB Profile State
   const [profile, setProfile] = useState({
-    name: userName,
-    course: "University",
-    university: "Student"
+    name: sessionName,
+    course: "Loading...",
+    university: "Loading..."
   });
 
   const [targetGwa, setTargetGwa] = useState("");
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [tempTarget, setTempTarget] = useState(targetGwa);
   
-  // State for accordion functionality
   const [expandedSemesterId, setExpandedSemesterId] = useState<number | null>(null);
   const [editingSemesterId, setEditingSemesterId] = useState<number | null>(null);
   const [isCreatingSemesterId, setIsCreatingSemesterId] = useState<number | null>(null);
   
-  // App State Modals
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedExportSems, setSelectedExportSems] = useState<number[]>([]);
   const [themeMode, setThemeMode] = useState<"Light" | "Dark">("Light");
 
-  // Fetch from DB on mount
+  // Fetch DB Profile & Semesters on mount
   useEffect(() => {
     if (session) {
+      // 1. Fetch Profile Data
+      fetch("/api/profile")
+        .then(res => res.json())
+        .then(data => {
+          if (data.name) {
+            setProfile({
+              name: data.name,
+              course: data.course || "N/A",
+              university: data.university || "N/A"
+            });
+          }
+        })
+        .catch(err => console.error("Profile load failed", err));
+
+      // 2. Fetch Semesters Data
       fetch("/api/semesters")
         .then(res => res.json())
         .then(data => {
@@ -452,7 +464,27 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     }
   }, [session]);
 
-  // Push to cloud wrapper
+  // Save Profile to DB
+  const handleSaveProfile = async () => {
+    setIsSavingProfile(true);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile)
+      });
+      if (res.ok) {
+        setIsProfileModalOpen(false);
+        // Force NextAuth to update the session name in the browser
+        await update({ name: profile.name }); 
+      }
+    } catch (err) {
+      console.error("Error saving profile", err);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   const syncToCloud = async (currentSemesters: any[]) => {
     try {
       await fetch("/api/semesters", {
@@ -545,18 +577,14 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     setView('guest');
   };
 
-  // Keypress preventer for number inputs
   const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (['e', 'E', '+', '-'].includes(e.key)) {
-      e.preventDefault();
-    }
+    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
   };
 
   const cumulativeNum = parseFloat(analytics.cumulative);
   const numericTarget = parseFloat(targetGwa);
   const isDeansLister = cumulativeNum > 0 && cumulativeNum <= 1.75;
 
-  // Dynamic Theme Classes
   const isDark = themeMode === "Dark";
   const mainBg = isDark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-900";
   const cardBg = isDark ? "bg-slate-900 border-slate-800 shadow-none text-slate-100" : "bg-white border-slate-200/60 shadow-sm text-slate-900";
@@ -590,11 +618,10 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 Export PDF
               </button>
               <div className="text-right hidden sm:block">
-                <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{userName.split(' ')[0]}</p>
-                <p className={`text-[10px] font-bold uppercase ${textSubHeading}`}>Student</p>
+                <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{profile.name.split(' ')[0]}</p>
+                <p className={`text-[10px] font-bold uppercase ${textSubHeading}`}>{profile.course}</p>
               </div>
               
-              {/* Profile Avatar Trigger */}
               <div 
                 className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold border-2 border-white shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all hover:scale-105" 
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -602,12 +629,11 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 {userInitials}
               </div>
 
-              {/* Profile Dropdown */}
               {isProfileMenuOpen && (
                 <div className={`absolute top-14 right-0 w-64 rounded-2xl shadow-2xl border p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
                   <div className={`p-3 border-b mb-2 sm:hidden ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
-                    <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{userName}</p>
-                    <p className={`text-xs ${textMuted}`}>Student Account</p>
+                    <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{profile.name}</p>
+                    <p className={`text-xs ${textMuted}`}>{profile.course}</p>
                   </div>
                   
                   <button onClick={() => { setIsProfileModalOpen(true); setIsProfileMenuOpen(false); }} className={`w-full text-left px-3 py-2.5 text-sm font-medium rounded-xl flex items-center gap-3 transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'}`}>
@@ -874,7 +900,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${textSubHeading}`}>Global Target GWA</p>
                 <div className="flex items-center gap-2">
                   {isEditingTarget ? (
-                    <input autoFocus type="number" min="0" step="0.05" value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => { blockInvalidChars(e); e.key === 'Enter' && saveTarget(); }} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
+                    <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
                   ) : (
                     <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
                       <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
@@ -952,8 +978,10 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
             </div>
 
             <div className="flex justify-end gap-3">
-              <button onClick={() => setIsProfileModalOpen(false)} className={`py-2.5 px-5 text-sm font-bold rounded-xl transition-colors ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
-              <button onClick={() => setIsProfileModalOpen(false)} className="py-2.5 px-5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95">Save Changes</button>
+              <button onClick={() => setIsProfileModalOpen(false)} disabled={isSavingProfile} className={`py-2.5 px-5 text-sm font-bold rounded-xl transition-colors ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
+              <button onClick={handleSaveProfile} disabled={isSavingProfile} className="py-2.5 px-5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                {isSavingProfile ? "Saving..." : "Save Changes"}
+              </button>
             </div>
           </div>
         </div>
