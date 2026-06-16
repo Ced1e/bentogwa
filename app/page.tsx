@@ -802,7 +802,19 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   }
 
   try {
-    const canvas = await html2canvas(input, { scale: 2 });
+    // Force the element to be visible/rendered for a split second
+    input.style.display = "block";
+
+    const canvas = await html2canvas(input, { 
+      scale: 2,
+      useCORS: true,       // Helps with images
+      allowTaint: true,    // Helps with images
+      logging: true        // This will print errors to your browser console!
+    });
+
+    // Hide it again
+    input.style.display = "none";
+
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     
@@ -813,8 +825,8 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
     pdf.save("BentoGWA_Report.pdf");
   } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert("There was an error generating your PDF. Please try again.");
+    console.error("DEBUGGING ERROR:", error);
+    alert("Check the browser console (Right-click -> Inspect -> Console) for the error details!");
   }
 };
 
@@ -1382,7 +1394,8 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       */}
       <div 
   id="pdf-report-content" 
-  className="fixed top-0 left-[-9999px] p-8 bg-white text-black font-sans w-[800px]">
+  style={{ display: "none", position: "fixed", top: 0, left: 0, width: "800px", padding: "40px", background: "white", color: "black" }}
+>
         <div className="border-b-2 border-black pb-4 mb-8">
           <h1 className="text-2xl font-black mb-1">Official Grade Report</h1>
           <div className="flex justify-between items-end">
