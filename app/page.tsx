@@ -182,7 +182,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
               </div>
               <div className="flex items-center gap-3 mt-1">
                 {isEditingTarget ? (
-                  <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => { blockInvalidChars(e); e.key === 'Enter' && saveTarget(); }} className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" />
+                  <input autoFocus type="number" min="0" step="0.05" value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => { blockInvalidChars(e); e.key === 'Enter' && saveTarget(); }} className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" />
                 ) : (
                   <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
                     <span className="text-3xl font-black text-slate-800 tabular-nums">{targetGwa || "--"}</span>
@@ -874,7 +874,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${textSubHeading}`}>Global Target GWA</p>
                 <div className="flex items-center gap-2">
                   {isEditingTarget ? (
-                    <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => { blockInvalidChars(e); e.key === 'Enter' && saveTarget(); }} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
+                    <input autoFocus type="number" min="0" step="0.05" value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} onKeyDown={(e) => { blockInvalidChars(e); e.key === 'Enter' && saveTarget(); }} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
                   ) : (
                     <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
                       <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
