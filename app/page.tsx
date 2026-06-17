@@ -953,7 +953,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
             </div>
             
             <div className="flex items-center gap-4 relative">
-              <button onClick={openExportModal} className={`hidden sm:flex items-center gap-2 px-3 py-1.5 border rounded-lg text-xs font-bold hover:shadow-sm hover:-translate-y-0.5 transition-all ${isDark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+             <button onClick={openExportModal} className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-xs font-bold hover:shadow-sm hover:-translate-y-0.5 transition-all ${isDark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 Export PDF
               </button>
@@ -1391,75 +1391,71 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   </div>
 )}
 
-      {/* ========================================
-  AESTHETIC HIGH-RES PDF LAYOUT (HIDDEN OFF-SCREEN)
-  ========================================
-*/}
 <div 
   id="pdf-report-content" 
   style={{ 
     position: "fixed", 
-    top: "-20000px",  // Moves it totally off-screen to prevent flashing
+    top: "-20000px", 
     left: "-20000px", 
-    width: "1080px",  // High-res Instagram Story Width
-    minHeight: "1530px", // A4 Proportions
+    width: "1080px", 
+    minHeight: "1530px", 
     padding: "80px", 
-    background: "linear-gradient(135deg, #020617 0%, #0f172a 100%)", // Beautiful deep slate/indigo gradient
-    color: "#ffffff",
+    background: "#ffffff", // Pure white background
+    color: "#0f172a", // Dark text
     fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
     boxSizing: "border-box"
   }}
 >
   {/* PREMIUM HEADER WITH LOGO */}
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "80px" }}>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "80px", borderBottom: "2px solid #e2e8f0", paddingBottom: "32px" }}>
     <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-      {/* CSS BentoGWA Logo */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '56px', height: '56px', padding: '6px', background: '#1e293b', borderRadius: '12px' }}>
+      {/* Logo */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '56px', height: '56px', padding: '6px', background: '#0f172a', borderRadius: '12px' }}>
         <div style={{ background: '#ffffff', borderRadius: '6px' }}></div>
         <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
         <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
         <div style={{ background: '#6366f1', borderRadius: '6px' }}></div>
       </div>
       <div>
-        <h1 style={{ fontSize: "42px", fontWeight: "900", margin: "0", letterSpacing: "-1.5px" }}>BentoGWA</h1>
-        <p style={{ fontSize: "16px", color: "#818cf8", margin: "4px 0 0 0", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "3px" }}>Official Academic Report</p>
+        <h1 style={{ fontSize: "42px", fontWeight: "900", margin: "0", letterSpacing: "-1.5px", color: "#0f172a" }}>BentoGWA</h1>
+        <p style={{ fontSize: "16px", color: "#6366f1", margin: "4px 0 0 0", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "3px" }}>Official Academic Report</p>
       </div>
     </div>
     <div style={{ textAlign: "right" }}>
-      <p style={{ fontSize: "16px", color: "#94a3b8", margin: "0", fontWeight: "bold" }}>Generated on</p>
-      <p style={{ fontSize: "20px", color: "#ffffff", margin: "4px 0 0 0", fontWeight: "bold" }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      <p style={{ fontSize: "16px", color: "#64748b", margin: "0", fontWeight: "bold" }}>Generated on</p>
+      <p style={{ fontSize: "20px", color: "#0f172a", margin: "4px 0 0 0", fontWeight: "bold" }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
     </div>
   </div>
 
-  {/* GLASSMORPHISM STUDENT PROFILE CARD */}
+  {/* STUDENT PROFILE CARD */}
   <div style={{ 
-    background: "rgba(255, 255, 255, 0.03)", 
-    border: "1px solid rgba(255, 255, 255, 0.1)", 
+    background: "#ffffff", 
+    border: "1px solid #cbd5e1", 
     borderRadius: "32px", 
     padding: "48px", 
     display: "flex", 
     justifyContent: "space-between", 
     alignItems: "center", 
-    marginBottom: "60px", 
-    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+    marginBottom: "60px",
+    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)"
   }}>
     <div>
-      <p style={{ fontSize: "14px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Student Profile</p>
-      <h2 style={{ fontSize: "56px", fontWeight: "900", margin: "0 0 16px 0", letterSpacing: "-2px", color: "#ffffff" }}>{profile.name}</h2>
-      <p style={{ fontSize: "22px", color: "#cbd5e1", margin: "0", fontWeight: "500" }}>{profile.course}</p>
-      <p style={{ fontSize: "18px", color: "#94a3b8", margin: "8px 0 0 0" }}>{profile.university}</p>
+      <p style={{ fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Student Profile</p>
+      <h2 style={{ fontSize: "56px", fontWeight: "900", margin: "0 0 16px 0", letterSpacing: "-2px", color: "#0f172a" }}>{profile.name}</h2>
+      <p style={{ fontSize: "22px", color: "#334155", margin: "0", fontWeight: "500" }}>{profile.course}</p>
+      <p style={{ fontSize: "18px", color: "#64748b", margin: "8px 0 0 0" }}>{profile.university}</p>
     </div>
     
     <div style={{ 
       textAlign: "right", 
-      background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.05) 100%)", 
+      background: "#f8fafc", 
       padding: "32px 48px", 
       borderRadius: "24px", 
-      border: "1px solid rgba(99, 102, 241, 0.3)" 
+      border: "1px solid #e2e8f0" 
     }}>
-      <p style={{ fontSize: "14px", color: "#818cf8", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Cumulative GWA</p>
-      <p style={{ fontSize: "72px", fontWeight: "900", margin: "0", color: "#ffffff", lineHeight: "1" }}>{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
-      <p style={{ fontSize: "18px", color: "#94a3b8", margin: "16px 0 0 0", fontWeight: "bold" }}>Total Earned Units: <span style={{color:"#fff"}}>{analytics.totalUnits}</span></p>
+      <p style={{ fontSize: "14px", color: "#6366f1", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Cumulative GWA</p>
+      <p style={{ fontSize: "72px", fontWeight: "900", margin: "0", color: "#0f172a", lineHeight: "1" }}>{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
+      <p style={{ fontSize: "18px", color: "#64748b", margin: "16px 0 0 0", fontWeight: "bold" }}>Total Earned Units: <span style={{color:"#0f172a"}}>{analytics.totalUnits}</span></p>
     </div>
   </div>
 
@@ -1471,15 +1467,15 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       .map(sem => {
         // Dynamic coloring for semester grade
         const gradeColor = activeScale.getColor(parseFloat(sem.gwa));
-        const badgeColor = gradeColor === 'emerald' ? '#34d399' : gradeColor === 'amber' ? '#fbbf24' : '#fb7185';
-        const badgeBg = gradeColor === 'emerald' ? 'rgba(16, 185, 129, 0.1)' : gradeColor === 'amber' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(225, 29, 72, 0.1)';
+        const badgeColor = gradeColor === 'emerald' ? '#059669' : gradeColor === 'amber' ? '#d97706' : '#e11d48';
+        const badgeBg = gradeColor === 'emerald' ? '#ecfdf5' : gradeColor === 'amber' ? '#fffbeb' : '#fff1f2';
 
         return (
         <div key={sem.id} style={{ breakInside: "avoid" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid rgba(255,255,255,0.1)", paddingBottom: "16px", marginBottom: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #e2e8f0", paddingBottom: "16px", marginBottom: "24px" }}>
             <div>
-              <h3 style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0", color: "#ffffff" }}>{sem.name}</h3>
-              <p style={{ fontSize: "16px", color: "#94a3b8", margin: "0" }}>{sem.subjects.length} Subjects Recorded</p>
+              <h3 style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0", color: "#0f172a" }}>{sem.name}</h3>
+              <p style={{ fontSize: "16px", color: "#64748b", margin: "0" }}>{sem.subjects.length} Subjects Recorded</p>
             </div>
             <div style={{ background: badgeBg, padding: "8px 20px", borderRadius: "100px", border: `1px solid ${badgeColor}` }}>
               <span style={{ fontSize: "14px", fontWeight: "bold", color: badgeColor, textTransform: "uppercase", letterSpacing: "1px" }}>Sem GWA: </span>
@@ -1490,17 +1486,17 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th style={{ padding: "16px 8px", textAlign: "left", fontSize: "14px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Subject Name</th>
-                <th style={{ padding: "16px 8px", textAlign: "center", fontSize: "14px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Units</th>
-                <th style={{ padding: "16px 8px", textAlign: "right", fontSize: "14px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Grade</th>
+                <th style={{ padding: "16px 8px", textAlign: "left", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Subject Name</th>
+                <th style={{ padding: "16px 8px", textAlign: "center", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Units</th>
+                <th style={{ padding: "16px 8px", textAlign: "right", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Grade</th>
               </tr>
             </thead>
             <tbody>
               {sem.subjects.map((sub: any) => (
                 <tr key={sub.id}>
-                  <td style={{ padding: "20px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "18px", fontWeight: "bold", color: "#f8fafc" }}>{sub.name || "Untitled"}</td>
-                  <td style={{ padding: "20px 8px", textAlign: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "18px", color: "#cbd5e1" }}>{sub.units || "-"}</td>
-                  <td style={{ padding: "20px 8px", textAlign: "right", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>{sub.grade || "-"}</td>
+                  <td style={{ padding: "20px 8px", borderBottom: "1px solid #e2e8f0", fontSize: "18px", fontWeight: "bold", color: "#1e293b" }}>{sub.name || "Untitled"}</td>
+                  <td style={{ padding: "20px 8px", textAlign: "center", borderBottom: "1px solid #e2e8f0", fontSize: "18px", color: "#475569" }}>{sub.units || "-"}</td>
+                  <td style={{ padding: "20px 8px", textAlign: "right", borderBottom: "1px solid #e2e8f0", fontSize: "20px", fontWeight: "900", color: "#0f172a" }}>{sub.grade || "-"}</td>
                 </tr>
               ))}
             </tbody>
