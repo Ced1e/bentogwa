@@ -259,7 +259,7 @@ function ResetPasswordView({ setView, token }: { setView: (v: any) => void, toke
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">New Password</label>
                 <div className="mt-1 relative group">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2-2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </span>
                   <input required value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -414,13 +414,13 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                     {subjects.map((subject, index) => (
                       <div key={subject.id} className="grid grid-cols-12 gap-3 items-center group animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div className="col-span-6 relative">
-                          <input type="text" placeholder={`Subject ${index + 1}`} value={subject.name} onChange={(e) => updateSubject(subject.id, "name", e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium placeholder:text-slate-300 hover:border-indigo-200" />
+                          <input type="text" placeholder={`Subject ${index + 1}`} value={subject.name} maxLength={30} onChange={(e) => updateSubject(subject.id, "name", e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium placeholder:text-slate-300 hover:border-indigo-200" />
                         </div>
                         <div className="col-span-3">
-                          <input type="number" min="0" step="0.25" placeholder="0.0" value={subject.grade} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "grade", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" />
+                          <input type="number" min="0" step="0.25" placeholder="0.0" value={subject.grade} onInput={(e: any) => e.target.value = e.target.value.slice(0, 5)} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "grade", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" />
                         </div>
                         <div className="col-span-2 md:col-span-3">
-                          <input type="number" min="0" placeholder="0" value={subject.units} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "units", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" />
+                          <input type="number" min="0" placeholder="0" value={subject.units} onInput={(e: any) => e.target.value = e.target.value.slice(0, 2)} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "units", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" />
                         </div>
                         <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => removeSubject(subject.id)} className="text-slate-300 hover:text-rose-500 transition-transform hover:scale-125">
@@ -641,7 +641,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
               <div className="mt-1 relative group">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2-2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 </span>
                 <input required name="password" value={formData.password} onChange={handleInputChange} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -707,10 +707,10 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const activeScale = SCALE_CONFIGS[profile.gradingScale as keyof typeof SCALE_CONFIGS] || SCALE_CONFIGS["PH_1_5"];
 
   const [targetGwa, setTargetGwa] = useState("");
-  const [remainingUnits, setRemainingUnits] = useState("30"); // NEW STATE FOR WHAT-IF MATH
+  const [totalDegreeUnits, setTotalDegreeUnits] = useState(""); 
   const [isEditingTarget, setIsEditingTarget] = useState(false);
-  const [tempTarget, setTempTarget] = useState(targetGwa);
-  const [tempUnits, setTempUnits] = useState(remainingUnits);
+  const [tempTarget, setTempTarget] = useState("");
+  const [tempUnits, setTempUnits] = useState("");
   
   const [expandedSemesterId, setExpandedSemesterId] = useState<number | null>(null);
   const [editingSemesterId, setEditingSemesterId] = useState<number | null>(null);
@@ -724,13 +724,14 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   
   const isDark = themeMode === "Dark";
 
+  // Persistent Target Data Fetching
   useEffect(() => {
     const savedTheme = localStorage.getItem("bentoGwaTheme");
-    if (savedTheme === "Dark" || savedTheme === "Light") {
-      setThemeMode(savedTheme);
-    } else if (typeof window !== "undefined" && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setThemeMode("Dark");
-    }
+    if (savedTheme === "Dark" || savedTheme === "Light") setThemeMode(savedTheme);
+    else if (typeof window !== "undefined" && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setThemeMode("Dark");
+
+    setTargetGwa(localStorage.getItem("bentoTargetGwa") || "");
+    setTotalDegreeUnits(localStorage.getItem("bentoTotalUnits") || "");
   }, []);
 
   const toggleTheme = () => {
@@ -857,15 +858,34 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     };
   }, [semesters, activeScale]);
 
+  const remainingUnitsNum = Number(totalDegreeUnits) > 0 ? Number(totalDegreeUnits) - analytics.totalUnits : 0;
+
+  const handleEditTargetClick = () => {
+    setTempTarget(targetGwa);
+    setTempUnits(remainingUnitsNum > 0 ? remainingUnitsNum.toString() : "");
+    setIsEditingTarget(true);
+  };
+
   const saveTarget = () => {
     const targetNum = parseFloat(tempTarget);
-    const unitsNum = parseFloat(tempUnits);
+    const enteredRemainingUnits = parseFloat(tempUnits);
     
-    if (!isNaN(targetNum) && targetNum > 0) setTargetGwa(targetNum.toFixed(2));
-    else setTargetGwa("");
+    if (!isNaN(targetNum) && targetNum > 0) {
+      setTargetGwa(targetNum.toFixed(2));
+      localStorage.setItem("bentoTargetGwa", targetNum.toFixed(2));
+    } else {
+      setTargetGwa("");
+      localStorage.setItem("bentoTargetGwa", "");
+    }
     
-    if (!isNaN(unitsNum) && unitsNum > 0) setRemainingUnits(unitsNum.toString());
-    else setRemainingUnits("30"); // fallback default
+    if (!isNaN(enteredRemainingUnits) && enteredRemainingUnits >= 0) {
+      const absoluteTotal = analytics.totalUnits + enteredRemainingUnits;
+      setTotalDegreeUnits(absoluteTotal.toString());
+      localStorage.setItem("bentoTotalUnits", absoluteTotal.toString());
+    } else {
+      setTotalDegreeUnits("");
+      localStorage.setItem("bentoTotalUnits", "");
+    }
 
     setIsEditingTarget(false);
   };
@@ -921,51 +941,61 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
 
   const cumulativeNum = parseFloat(analytics.cumulative);
   const numericTarget = parseFloat(targetGwa);
-  const numericRemainingUnits = parseFloat(remainingUnits) || 30;
   
-  // DYNAMIC TARGET & DEANS LISTER LOGIC
   const isDeansLister = cumulativeNum > 0 && (activeScale.lowerIsBetter ? cumulativeNum <= activeScale.deans : cumulativeNum >= activeScale.deans);
   
   // NEW "WHAT-IF" MATH ENGINE
-  let requiredFutureGrade = 0;
   let targetPossible = true;
   let targetMessage = "";
-  let targetBadgeColor = "bg-indigo-100 text-indigo-700 border-indigo-200";
+  let targetBadgeColor = isDark ? "bg-indigo-900/30 text-indigo-400 border-indigo-800" : "bg-indigo-50 text-indigo-600 border-indigo-200";
 
-  if (numericTarget > 0 && cumulativeNum > 0 && analytics.totalUnits > 0) {
-    const totalFutureUnits = analytics.totalUnits + numericRemainingUnits;
-    requiredFutureGrade = ((numericTarget * totalFutureUnits) - (cumulativeNum * analytics.totalUnits)) / numericRemainingUnits;
-    
-    if (activeScale.lowerIsBetter) { 
-      // e.g., 1.0 to 5.0 system
-      if (requiredFutureGrade < activeScale.maxGrade) {
-        targetPossible = false;
-        targetMessage = "Impossible. Requires better than " + activeScale.maxGrade.toFixed(2);
-        targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
-      } else if (requiredFutureGrade > activeScale.minGrade) {
-        targetMessage = "You already failed this target mathematically.";
-        targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
-      } else if (requiredFutureGrade > 3.0) { // Assuming 3.0 is a passing threshold in PH
-        targetMessage = `Safe! You only need to average ${requiredFutureGrade.toFixed(2)}`;
-        targetBadgeColor = isDark ? "bg-emerald-900/30 text-emerald-400 border-emerald-800" : "bg-emerald-50 text-emerald-600 border-emerald-100";
-      } else {
-        targetMessage = `You must average a ${requiredFutureGrade.toFixed(2)}`;
-        targetBadgeColor = isDark ? "bg-amber-900/30 text-amber-400 border-amber-800" : "bg-amber-50 text-amber-600 border-amber-100";
-      }
+  if (numericTarget > 0 && cumulativeNum > 0 && analytics.totalUnits > 0 && Number(totalDegreeUnits) > 0) {
+    if (remainingUnitsNum <= 0) {
+      targetPossible = false;
+      targetMessage = "You have completed all units!";
+      targetBadgeColor = isDark ? "bg-emerald-900/30 text-emerald-400 border-emerald-800" : "bg-emerald-50 text-emerald-600 border-emerald-100";
     } else {
-      // e.g., 4.0 system or 100% system
-      if (requiredFutureGrade > activeScale.maxGrade) {
-        targetPossible = false;
-        targetMessage = "Impossible. Requires higher than " + (activeScale.maxGrade > 10 ? activeScale.maxGrade + "%" : activeScale.maxGrade.toFixed(2));
-        targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
-      } else if (requiredFutureGrade < activeScale.minGrade) {
-        targetMessage = `Safe! You only need to average ${requiredFutureGrade.toFixed(2)}`;
-        targetBadgeColor = isDark ? "bg-emerald-900/30 text-emerald-400 border-emerald-800" : "bg-emerald-50 text-emerald-600 border-emerald-100";
+      const requiredFutureGrade = ((numericTarget * Number(totalDegreeUnits)) - (cumulativeNum * analytics.totalUnits)) / remainingUnitsNum;
+      
+      if (activeScale.lowerIsBetter) { 
+        if (requiredFutureGrade < activeScale.maxGrade) {
+          targetPossible = false;
+          targetMessage = "Impossible. Requires better than a " + activeScale.maxGrade.toFixed(2);
+          targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
+        } else if (requiredFutureGrade > activeScale.minGrade) {
+          targetMessage = "You already failed this target mathematically.";
+          targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
+        } else if (requiredFutureGrade > 3.0) { 
+          targetMessage = `Safe! You only need to average a ${requiredFutureGrade.toFixed(2)} in your final ${remainingUnitsNum} units to graduate with this target.`;
+          targetBadgeColor = isDark ? "bg-emerald-900/30 text-emerald-400 border-emerald-800" : "bg-emerald-50 text-emerald-600 border-emerald-100";
+        } else {
+          targetMessage = `You must average a ${requiredFutureGrade.toFixed(2)} across your final ${remainingUnitsNum} units to hit this target.`;
+          targetBadgeColor = isDark ? "bg-amber-900/30 text-amber-400 border-amber-800" : "bg-amber-50 text-amber-600 border-amber-100";
+        }
       } else {
-        targetMessage = `You must average a ${requiredFutureGrade.toFixed(2)}`;
-        targetBadgeColor = isDark ? "bg-amber-900/30 text-amber-400 border-amber-800" : "bg-amber-50 text-amber-600 border-amber-100";
+        if (requiredFutureGrade > activeScale.maxGrade) {
+          targetPossible = false;
+          targetMessage = "Impossible. Requires higher than a " + (activeScale.maxGrade > 10 ? activeScale.maxGrade + "%" : activeScale.maxGrade.toFixed(2));
+          targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
+        } else if (requiredFutureGrade < activeScale.minGrade) {
+          targetMessage = `Safe! You only need to average a ${requiredFutureGrade.toFixed(2)} in your final ${remainingUnitsNum} units to hit this target.`;
+          targetBadgeColor = isDark ? "bg-emerald-900/30 text-emerald-400 border-emerald-800" : "bg-emerald-50 text-emerald-600 border-emerald-100";
+        } else {
+          targetMessage = `You must average a ${requiredFutureGrade.toFixed(2)} across your final ${remainingUnitsNum} units to hit this target.`;
+          targetBadgeColor = isDark ? "bg-amber-900/30 text-amber-400 border-amber-800" : "bg-amber-50 text-amber-600 border-amber-100";
+        }
       }
     }
+  }
+
+  // SVG DONUT MATH
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  let progressOffset = circumference;
+  let progressPct = 0;
+  if (Number(totalDegreeUnits) > 0 && analytics.totalUnits > 0) {
+    progressPct = Math.min(100, (analytics.totalUnits / Number(totalDegreeUnits)) * 100);
+    progressOffset = circumference - (progressPct / 100) * circumference;
   }
 
   const mainBg = isDark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-900";
@@ -1098,7 +1128,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                       }}>
                         <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 flex-1 min-w-0 pr-2 md:pr-4">
                           {editingSemesterId === sem.id ? (
-                             <input autoFocus type="text" value={sem.name} onChange={(e) => setSemesters(semesters.map(s => s.id === sem.id ? { ...s, name: e.target.value } : s))} className={`text-[16px] md:text-sm font-bold border-b outline-none px-1 py-0.5 w-full max-w-[200px] ${isDark ? 'bg-slate-900 border-indigo-500 text-white' : 'bg-indigo-50 border-indigo-300 text-slate-900'}`} onClick={(e) => e.stopPropagation()} />
+                             <input autoFocus type="text" value={sem.name} maxLength={40} onChange={(e) => setSemesters(semesters.map(s => s.id === sem.id ? { ...s, name: e.target.value } : s))} className={`text-[16px] md:text-sm font-bold border-b outline-none px-1 py-0.5 w-full max-w-[200px] ${isDark ? 'bg-slate-900 border-indigo-500 text-white' : 'bg-indigo-50 border-indigo-300 text-slate-900'}`} onClick={(e) => e.stopPropagation()} />
                           ) : (
                             <p className={`text-sm font-bold truncate group-hover:text-indigo-500 transition-colors ${textHeading}`}>{sem.name}</p>
                           )}
@@ -1144,17 +1174,23 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                 <div className="space-y-2">
                                    {sem.subjects.map((sub: any, idx: number) => (
                                      <div key={sub.id} className="grid grid-cols-12 gap-2 items-center group">
-                                       <div className="col-span-6"><input type="text" placeholder={`Subj ${idx+1}`} value={sub.name} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'name', e.target.value)} className={`w-full rounded-lg px-3 py-2 text-[16px] md:text-sm outline-none transition-colors ${inputBg}`} /></div>
-                                       <div className="col-span-3"><input type="number" min="0" step="0.25" placeholder="0.0" value={sub.grade} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'grade', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} /></div>
-                                       <div className="col-span-2"><input type="number" min="0" placeholder="0" value={sub.units} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'units', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums ${inputBg}`} /></div>
+                                       <div className="col-span-6"><input type="text" placeholder={`Subj ${idx+1}`} value={sub.name} maxLength={40} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'name', e.target.value)} className={`w-full rounded-lg px-3 py-2 text-[16px] md:text-sm outline-none transition-colors ${inputBg}`} /></div>
+                                       <div className="col-span-3"><input type="number" min="0" step="0.25" placeholder="0.0" value={sub.grade} onInput={(e: any) => e.target.value = e.target.value.slice(0, 5)} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'grade', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} /></div>
+                                       <div className="col-span-2"><input type="number" min="0" placeholder="0" value={sub.units} onInput={(e: any) => e.target.value = e.target.value.slice(0, 2)} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'units', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums ${inputBg}`} /></div>
                                        <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => removeEditingSubject(sem.id, sub.id)} className="text-slate-400 hover:text-rose-500 hover:scale-125 transition-transform"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
                                      </div>
                                    ))}
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3 justify-between items-center mt-5">
-                                   <button onClick={() => addEditingSubject(sem.id)} className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 border border-dashed hover:shadow-sm ${isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-800' : 'border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-300'}`}>
-                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                                     Add Subject Row
+                                   <button 
+                                      onClick={() => addEditingSubject(sem.id)} 
+                                      disabled={Number(totalDegreeUnits) > 0 && remainingUnitsNum <= 0}
+                                      className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all border border-dashed hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-800' : 'border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-300'} ${Number(totalDegreeUnits) > 0 && remainingUnitsNum <= 0 ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-600 dark:bg-rose-900/20 dark:text-rose-400' : 'active:scale-95'}`}>
+                                     {Number(totalDegreeUnits) > 0 && remainingUnitsNum <= 0 ? (
+                                        <>✓ All Units Completed</>
+                                     ) : (
+                                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg> Add Subject Row</>
+                                     )}
                                    </button>
                                    {isCreatingSemesterId === sem.id ? (
                                       <div className="flex gap-2 w-full sm:w-auto">
@@ -1234,7 +1270,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                           <div className="absolute left-0 right-0 border-t-2 border-dashed border-emerald-400/60 z-0 pointer-events-none flex justify-end pr-1" style={{ bottom: `${activeScale.getHeight(parseFloat(targetGwa))}%` }}></div>
                         )}
 
-                        {[...analytics.processedSemesters].sort((a,b) => a.id - b.id).map((sem) => {
+                        {[...analytics.processedSemesters].reverse().map((sem) => {
                            const gwaNum = parseFloat(sem.gwa);
                            const heightPct = activeScale.getHeight(gwaNum);
                            const gradeColor = activeScale.getColor(gwaNum);
@@ -1274,6 +1310,42 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                  `}} />
               </div>
 
+              {/* --- NEW DEGREE PROGRESS DONUT CHART --- */}
+              <div className={`col-span-2 lg:col-span-1 rounded-[20px] p-5 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 flex flex-col justify-center ${cardBg}`}>
+                <div className="flex justify-between items-center mb-4">
+                  <p className={`text-xs font-bold uppercase tracking-wider ${textSubHeading}`}>Degree Progress</p>
+                  <svg className={`w-4 h-4 ${textMuted}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                </div>
+                
+                <div className="flex items-center gap-6">
+                  <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
+                    {/* Background Circle */}
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle cx="48" cy="48" r={radius} stroke="currentColor" strokeWidth="8" fill="transparent" className={`${isDark ? 'text-slate-800' : 'text-slate-100'}`} />
+                      {/* Foreground Circle */}
+                      <circle 
+                        cx="48" cy="48" r={radius} stroke="currentColor" strokeWidth="8" fill="transparent" 
+                        strokeDasharray={circumference} strokeDashoffset={progressOffset} strokeLinecap="round"
+                        className="text-indigo-500 transition-all duration-1000 ease-out" 
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center justify-center">
+                      <span className={`text-xl font-black ${textHeading}`}>{progressPct.toFixed(0)}%</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex justify-between items-center border-b pb-2 dark:border-slate-800">
+                      <span className={`text-xs font-bold ${textMuted}`}>Completed</span>
+                      <span className={`text-sm font-black ${textHeading}`}>{analytics.totalUnits}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className={`text-xs font-bold ${textMuted}`}>Remaining</span>
+                      <span className={`text-sm font-black ${textHeading}`}>{Number(totalDegreeUnits) > 0 ? remainingUnitsNum : "--"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* --- NEW WHAT-IF ANALYZER CARD --- */}
               <div className={`col-span-2 lg:col-span-1 rounded-[20px] p-5 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 flex flex-col justify-center ${cardBg}`}>
                 <div className="flex justify-between items-center mb-4">
@@ -1285,32 +1357,35 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                   <div className="space-y-3 animate-in zoom-in-95 duration-200">
                     <div>
                       <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Target Final GWA</label>
-                      <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
+                      <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} onInput={(e: any) => e.target.value = e.target.value.slice(0, 5)} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
                     </div>
                     <div>
                       <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Remaining Units to Take</label>
-                      <input type="number" min="1" step="1" onKeyDown={blockInvalidChars} value={tempUnits} onChange={(e) => setTempUnits(e.target.value)} className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
+                      <input type="number" min="1" step="1" onKeyDown={blockInvalidChars} onInput={(e: any) => e.target.value = e.target.value.slice(0, 3)} value={tempUnits} onChange={(e) => setTempUnits(e.target.value)} className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
                     </div>
-                    <button onClick={saveTarget} className="w-full mt-2 text-xs font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">Calculate</button>
+                    <div className="flex gap-2 mt-2">
+                       <button onClick={() => setIsEditingTarget(false)} className={`w-1/3 text-xs font-bold rounded-lg transition-colors ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>Cancel</button>
+                       <button onClick={saveTarget} className="w-2/3 text-xs font-bold text-white bg-indigo-600 px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors">Calculate</button>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col group cursor-pointer active:scale-95 transition-transform" onClick={() => setIsEditingTarget(true)}>
+                  <div className="flex flex-col group cursor-pointer active:scale-95 transition-transform" onClick={handleEditTargetClick}>
                     <div className="flex items-baseline gap-2 mb-1">
                       <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
                       <span className={`text-xs font-medium ${textMuted}`}>Goal</span>
                     </div>
                     <div className="flex items-baseline gap-2 mb-3">
-                      <span className={`text-xl font-bold tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{remainingUnits}</span>
+                      <span className={`text-xl font-bold tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{Number(totalDegreeUnits) > 0 ? remainingUnitsNum : "--"}</span>
                       <span className={`text-xs font-medium ${textMuted}`}>Units Left</span>
                     </div>
                     
-                    {cumulativeNum > 0 && !isNaN(numericTarget) ? (
+                    {cumulativeNum > 0 && !isNaN(numericTarget) && Number(totalDegreeUnits) > 0 ? (
                       <div className={`p-3 rounded-xl border ${targetBadgeColor} shadow-sm`}>
                          <p className="text-xs font-bold leading-tight">{targetMessage}</p>
                       </div>
                     ) : (
                       <div className={`p-3 rounded-xl border border-dashed ${isDark ? 'border-slate-700 text-slate-500' : 'border-slate-300 text-slate-400'}`}>
-                         <p className="text-xs font-medium text-center">Click to set your target goal.</p>
+                         <p className="text-xs font-medium text-center">Click to set your target goal & remaining units.</p>
                       </div>
                     )}
                   </div>
@@ -1363,15 +1438,15 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
             <div className="space-y-4 mb-6">
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>Full Name</label>
-                <input type="text" value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
+                <input type="text" maxLength={30} value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
               </div>
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>Course / Program</label>
-                <input type="text" value={profile.course} onChange={(e) => setProfile({...profile, course: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
+                <input type="text" maxLength={40} value={profile.course} onChange={(e) => setProfile({...profile, course: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
               </div>
               <div>
                 <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>University</label>
-                <input type="text" value={profile.university} onChange={(e) => setProfile({...profile, university: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
+                <input type="text" maxLength={50} value={profile.university} onChange={(e) => setProfile({...profile, university: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
               </div>
               
               <div className="pt-2">
