@@ -706,7 +706,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const [expandedSemesterId, setExpandedSemesterId] = useState<number | null>(null);
   const [editingSemesterId, setEditingSemesterId] = useState<number | null>(null);
   const [isCreatingSemesterId, setIsCreatingSemesterId] = useState<number | null>(null);
-  
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -795,38 +795,39 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   };
 
   const exportToPDF = async () => {
-  const input = document.getElementById("pdf-report-content");
-  if (!input) {
-    console.error("PDF content element not found!");
-    return;
-  }
-
+  setIsGeneratingPDF(true);
   try {
-    // Force the element to be visible/rendered for a split second
-    input.style.display = "block";
+    const input = document.getElementById("pdf-report-content");
+    if (!input) {
+      alert("Report content not found!");
+      return;
+    }
 
+    // High-resolution capture without flashing the screen
     const canvas = await html2canvas(input, { 
-      scale: 2,
-      useCORS: true,       // Helps with images
-      allowTaint: true,    // Helps with images
-      logging: true        // This will print errors to your browser console!
+      scale: 2, 
+      useCORS: true,
+      backgroundColor: null // Honors the gradient background we built
     });
-
-    // Hide it again
-    input.style.display = "none";
 
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     
-    const imgProps = pdf.getImageProperties(imgData);
+    // Fit the 1080px wide image perfectly onto the A4 PDF page
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save("BentoGWA_Report.pdf");
+    
+    // Auto-name the file based on the user
+    pdf.save(`BentoGWA_${profile.name.replace(/\s+/g, '_')}_Report.pdf`);
+    
+    setIsExportModalOpen(false); // Close modal when done
   } catch (error) {
-    console.error("DEBUGGING ERROR:", error);
-    alert("Check the browser console (Right-click -> Inspect -> Console) for the error details!");
+    console.error("PDF Generation Error:", error);
+    alert("There was an error generating your PDF.");
+  } finally {
+    setIsGeneratingPDF(false);
   }
 };
 
@@ -1339,117 +1340,177 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
         ========================================
       */}
       {isExportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
-          <div className={`rounded-[24px] p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
-            <h3 className={`text-lg font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Export Academic Grades</h3>
-            <p className={`text-sm mb-6 ${textMuted}`}>Select the semesters you wish to include in your generated PDF report.</p>
-            
-            <div className={`flex justify-between items-center mb-3 pb-3 border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-              <span className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Select All</span>
-              <input 
-                type="checkbox" 
-                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                checked={selectedExportSems.length === semesters.length}
-                onChange={(e) => setSelectedExportSems(e.target.checked ? semesters.map(s => s.id) : [])}
-              />
-            </div>
-
-            <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2 custom-scrollbar">
-              {semesters.map(sem => (
-                <label key={sem.id} className={`flex justify-between items-center p-3 rounded-xl cursor-pointer border transition-colors ${isDark ? 'hover:bg-slate-800 border-transparent hover:border-slate-700' : 'hover:bg-slate-50 border-transparent hover:border-slate-200'}`}>
-                  <div>
-                    <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{sem.name}</p>
-                    <p className={`text-[10px] font-medium ${textMuted}`}>GWA: {parseFloat(analytics.processedSemesters.find(s => s.id === sem.id)?.gwa || "0").toFixed(2)}</p>
-                  </div>
-                  <input 
-                    type="checkbox" 
-                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                    checked={selectedExportSems.includes(sem.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedExportSems([...selectedExportSems, sem.id]);
-                      else setSelectedExportSems(selectedExportSems.filter(id => id !== sem.id));
-                    }}
-                  />
-                </label>
-              ))}
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setIsExportModalOpen(false)} className={`w-1/3 py-3 text-sm font-bold rounded-xl transition-colors ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
-              <button 
-                onClick={handleExportPDF} 
-                disabled={selectedExportSems.length === 0}
-                className="w-2/3 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95"
-              >
-                Generate PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================
-        PRINT-ONLY LAYOUT (Hidden on screen)
-        ========================================
-      */}
-      <div 
-  id="pdf-report-content" 
-  style={{ 
-    display: "none", 
-    position: "fixed", 
-    top: 0, 
-    left: 0, 
-    width: "800px", 
-    padding: "40px", 
-    background: "#ffffff", 
-    color: "#000000",
-    fontFamily: "Arial, sans-serif" 
-  }}
->
-  <div style={{ borderBottom: "2px solid #000000", paddingBottom: "16px", marginBottom: "32px" }}>
-    <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: "0 0 8px 0" }}>Official Grade Report</h1>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-      <div>
-        <p style={{ fontSize: "18px", fontWeight: "bold", margin: "0" }}>{profile.name}</p>
-        <p style={{ fontSize: "14px", margin: "4px 0 0 0" }}>{profile.course} | {profile.university}</p>
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
+    <div className={`rounded-[24px] p-6 max-w-md w-full shadow-2xl border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+      <h3 className={`text-lg font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Export Aesthetic Report</h3>
+      <p className={`text-sm mb-6 ${textMuted}`}>Select the semesters to include. We will generate a high-res, beautifully styled dark-mode PDF perfect for sharing.</p>
+      
+      <div className={`flex justify-between items-center mb-3 pb-3 border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+        <span className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Select All</span>
+        <input 
+          type="checkbox" 
+          className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+          checked={selectedExportSems.length === semesters.length}
+          onChange={(e) => setSelectedExportSems(e.target.checked ? semesters.map(s => s.id) : [])}
+        />
       </div>
-      <div style={{ textAlign: "right" }}>
-        <p style={{ fontSize: "14px", fontWeight: "bold", margin: "0" }}>Cumulative GWA: {cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
-        <p style={{ fontSize: "14px", margin: "4px 0 0 0" }}>Total Earned Units: {analytics.totalUnits}</p>
+
+      <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2 custom-scrollbar">
+        {semesters.map(sem => (
+          <label key={sem.id} className={`flex justify-between items-center p-3 rounded-xl cursor-pointer border transition-colors ${isDark ? 'hover:bg-slate-800 border-transparent hover:border-slate-700' : 'hover:bg-slate-50 border-transparent hover:border-slate-200'}`}>
+            <div>
+              <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{sem.name}</p>
+              <p className={`text-[10px] font-medium ${textMuted}`}>GWA: {parseFloat(analytics.processedSemesters.find(s => s.id === sem.id)?.gwa || "0").toFixed(2)}</p>
+            </div>
+            <input 
+              type="checkbox" 
+              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              checked={selectedExportSems.includes(sem.id)}
+              onChange={(e) => {
+                if (e.target.checked) setSelectedExportSems([...selectedExportSems, sem.id]);
+                else setSelectedExportSems(selectedExportSems.filter(id => id !== sem.id));
+              }}
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="flex gap-3">
+        <button onClick={() => setIsExportModalOpen(false)} disabled={isGeneratingPDF} className={`w-1/3 py-3 text-sm font-bold rounded-xl transition-colors ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
+        <button 
+          onClick={exportToPDF} 
+          disabled={selectedExportSems.length === 0 || isGeneratingPDF}
+          className="w-2/3 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md transition-all flex justify-center items-center gap-2"
+        >
+          {isGeneratingPDF ? (
+            <><svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Rendering...</>
+          ) : "Download Canvas"}
+        </button>
       </div>
     </div>
   </div>
+)}
 
-  <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+      {/* ========================================
+  AESTHETIC HIGH-RES PDF LAYOUT (HIDDEN OFF-SCREEN)
+  ========================================
+*/}
+<div 
+  id="pdf-report-content" 
+  style={{ 
+    position: "fixed", 
+    top: "-20000px",  // Moves it totally off-screen to prevent flashing
+    left: "-20000px", 
+    width: "1080px",  // High-res Instagram Story Width
+    minHeight: "1530px", // A4 Proportions
+    padding: "80px", 
+    background: "linear-gradient(135deg, #020617 0%, #0f172a 100%)", // Beautiful deep slate/indigo gradient
+    color: "#ffffff",
+    fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+    boxSizing: "border-box"
+  }}
+>
+  {/* PREMIUM HEADER WITH LOGO */}
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "80px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+      {/* CSS BentoGWA Logo */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '56px', height: '56px', padding: '6px', background: '#1e293b', borderRadius: '12px' }}>
+        <div style={{ background: '#ffffff', borderRadius: '6px' }}></div>
+        <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
+        <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
+        <div style={{ background: '#6366f1', borderRadius: '6px' }}></div>
+      </div>
+      <div>
+        <h1 style={{ fontSize: "42px", fontWeight: "900", margin: "0", letterSpacing: "-1.5px" }}>BentoGWA</h1>
+        <p style={{ fontSize: "16px", color: "#818cf8", margin: "4px 0 0 0", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "3px" }}>Official Academic Report</p>
+      </div>
+    </div>
+    <div style={{ textAlign: "right" }}>
+      <p style={{ fontSize: "16px", color: "#94a3b8", margin: "0", fontWeight: "bold" }}>Generated on</p>
+      <p style={{ fontSize: "20px", color: "#ffffff", margin: "4px 0 0 0", fontWeight: "bold" }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    </div>
+  </div>
+
+  {/* GLASSMORPHISM STUDENT PROFILE CARD */}
+  <div style={{ 
+    background: "rgba(255, 255, 255, 0.03)", 
+    border: "1px solid rgba(255, 255, 255, 0.1)", 
+    borderRadius: "32px", 
+    padding: "48px", 
+    display: "flex", 
+    justifyContent: "space-between", 
+    alignItems: "center", 
+    marginBottom: "60px", 
+    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+  }}>
+    <div>
+      <p style={{ fontSize: "14px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Student Profile</p>
+      <h2 style={{ fontSize: "56px", fontWeight: "900", margin: "0 0 16px 0", letterSpacing: "-2px", color: "#ffffff" }}>{profile.name}</h2>
+      <p style={{ fontSize: "22px", color: "#cbd5e1", margin: "0", fontWeight: "500" }}>{profile.course}</p>
+      <p style={{ fontSize: "18px", color: "#94a3b8", margin: "8px 0 0 0" }}>{profile.university}</p>
+    </div>
+    
+    <div style={{ 
+      textAlign: "right", 
+      background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.05) 100%)", 
+      padding: "32px 48px", 
+      borderRadius: "24px", 
+      border: "1px solid rgba(99, 102, 241, 0.3)" 
+    }}>
+      <p style={{ fontSize: "14px", color: "#818cf8", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Cumulative GWA</p>
+      <p style={{ fontSize: "72px", fontWeight: "900", margin: "0", color: "#ffffff", lineHeight: "1" }}>{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
+      <p style={{ fontSize: "18px", color: "#94a3b8", margin: "16px 0 0 0", fontWeight: "bold" }}>Total Earned Units: <span style={{color:"#fff"}}>{analytics.totalUnits}</span></p>
+    </div>
+  </div>
+
+  {/* SEMESTER BREAKDOWNS */}
+  <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
     {analytics.processedSemesters
       .filter(sem => selectedExportSems.includes(sem.id))
       .sort((a,b) => a.id - b.id)
-      .map(sem => (
-      <div key={sem.id} style={{ breakInside: "avoid" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", backgroundColor: "#f1f5f9", padding: "8px", border: "1px solid #cbd5e1", fontWeight: "bold", marginBottom: "8px" }}>
-          <span style={{ fontSize: "16px" }}>{sem.name}</span>
-          <span style={{ fontSize: "16px" }}>Semester GWA: {parseFloat(sem.gwa).toFixed(2)}</span>
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "14px" }}>
-          <thead>
-            <tr style={{ backgroundColor: "#f8fafc" }}>
-              <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "left" }}>Subject</th>
-              <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>Grade</th>
-              <th style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>Units</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sem.subjects.map((sub: any) => (
-              <tr key={sub.id}>
-                <td style={{ border: "1px solid #cbd5e1", padding: "8px" }}>{sub.name || "Untitled"}</td>
-                <td style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>{sub.grade || "-"}</td>
-                <td style={{ border: "1px solid #cbd5e1", padding: "8px", textAlign: "center" }}>{sub.units || "-"}</td>
+      .map(sem => {
+        // Dynamic coloring for semester grade
+        const gradeColor = activeScale.getColor(parseFloat(sem.gwa));
+        const badgeColor = gradeColor === 'emerald' ? '#34d399' : gradeColor === 'amber' ? '#fbbf24' : '#fb7185';
+        const badgeBg = gradeColor === 'emerald' ? 'rgba(16, 185, 129, 0.1)' : gradeColor === 'amber' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(225, 29, 72, 0.1)';
+
+        return (
+        <div key={sem.id} style={{ breakInside: "avoid" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid rgba(255,255,255,0.1)", paddingBottom: "16px", marginBottom: "24px" }}>
+            <div>
+              <h3 style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0", color: "#ffffff" }}>{sem.name}</h3>
+              <p style={{ fontSize: "16px", color: "#94a3b8", margin: "0" }}>{sem.subjects.length} Subjects Recorded</p>
+            </div>
+            <div style={{ background: badgeBg, padding: "8px 20px", borderRadius: "100px", border: `1px solid ${badgeColor}` }}>
+              <span style={{ fontSize: "14px", fontWeight: "bold", color: badgeColor, textTransform: "uppercase", letterSpacing: "1px" }}>Sem GWA: </span>
+              <span style={{ fontSize: "24px", fontWeight: "900", color: badgeColor }}>{parseFloat(sem.gwa).toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={{ padding: "16px 8px", textAlign: "left", fontSize: "14px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Subject Name</th>
+                <th style={{ padding: "16px 8px", textAlign: "center", fontSize: "14px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Units</th>
+                <th style={{ padding: "16px 8px", textAlign: "right", fontSize: "14px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>Grade</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ))}
+            </thead>
+            <tbody>
+              {sem.subjects.map((sub: any) => (
+                <tr key={sub.id}>
+                  <td style={{ padding: "20px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "18px", fontWeight: "bold", color: "#f8fafc" }}>{sub.name || "Untitled"}</td>
+                  <td style={{ padding: "20px 8px", textAlign: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "18px", color: "#cbd5e1" }}>{sub.units || "-"}</td>
+                  <td style={{ padding: "20px 8px", textAlign: "right", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "20px", fontWeight: "900", color: "#ffffff" }}>{sub.grade || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )})}
+      
+      {selectedExportSems.length === 0 && (
+        <p style={{ textAlign: "center", color: "#64748b", fontSize: "18px", fontStyle: "italic", marginTop: "40px" }}>No semesters selected for export.</p>
+      )}
   </div>
 </div>
       </>
