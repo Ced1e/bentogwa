@@ -361,7 +361,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">BentoGWA</h1>
-                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-100/50 border border-indigo-100 px-1.5 py-0.5 rounded-md inline-block">by Ced1e</span>
+               <span className="text-[10px] font-bold text-indigo-500 bg-indigo-100/50 border border-indigo-100 px-1.5 py-0.5 rounded-md inline-block">by Ced1e</span>
               </div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Guest Dashboard</p>
             </div>
@@ -712,6 +712,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedExportSems, setSelectedExportSems] = useState<number[]>([]);
   const [themeMode, setThemeMode] = useState<"Light" | "Dark">("Light");
+  
+  // Single declaration of isDark
+  const isDark = themeMode === "Dark";
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("bentoGwaTheme");
@@ -795,41 +798,41 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   };
 
   const exportToPDF = async () => {
-  setIsGeneratingPDF(true);
-  try {
-    const input = document.getElementById("pdf-report-content");
-    if (!input) {
-      alert("Report content not found!");
-      return;
+    setIsGeneratingPDF(true);
+    try {
+      const input = document.getElementById("pdf-report-content");
+      if (!input) {
+        alert("Report content not found!");
+        return;
+      }
+
+      // High-resolution capture without flashing the screen
+      const canvas = await html2canvas(input, { 
+        scale: 2, 
+        useCORS: true,
+        backgroundColor: "#ffffff" // Pure white background to be safe
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      
+      // Fit the 1080px wide image perfectly onto the A4 PDF page
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      
+      // Auto-name the file based on the user
+      pdf.save(`BentoGWA_${profile.name.replace(/\s+/g, '_')}_Report.pdf`);
+      
+      setIsExportModalOpen(false); // Close modal when done
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      alert("There was an error generating your PDF.");
+    } finally {
+      setIsGeneratingPDF(false);
     }
-
-    // High-resolution capture without flashing the screen
-    const canvas = await html2canvas(input, { 
-      scale: 2, 
-      useCORS: true,
-      backgroundColor: null // Honors the gradient background we built
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    
-    // Fit the 1080px wide image perfectly onto the A4 PDF page
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    
-    // Auto-name the file based on the user
-    pdf.save(`BentoGWA_${profile.name.replace(/\s+/g, '_')}_Report.pdf`);
-    
-    setIsExportModalOpen(false); // Close modal when done
-  } catch (error) {
-    console.error("PDF Generation Error:", error);
-    alert("There was an error generating your PDF.");
-  } finally {
-    setIsGeneratingPDF(false);
-  }
-};
+  };
 
   const analytics = useMemo(() => {
     let totalUnits = 0; let totalPoints = 0; let allSubjects: any[] = [];
@@ -903,10 +906,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     setSelectedExportSems(semesters.map(s => s.id));
     setIsExportModalOpen(true);
   };
-  const handleExportPDF = () => {
-  setIsExportModalOpen(false);
-  exportToPDF();
-};
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -925,7 +924,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const isDeansLister = cumulativeNum > 0 && (activeScale.lowerIsBetter ? cumulativeNum <= activeScale.deans : cumulativeNum >= activeScale.deans);
   const targetDiff = Math.abs(numericTarget - cumulativeNum).toFixed(2);
 
-  const isDark = themeMode === "Dark";
+  
   const mainBg = isDark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-900";
   const cardBg = isDark ? "bg-slate-900 border-slate-800 shadow-none text-slate-100" : "bg-white border-slate-200/60 shadow-sm text-slate-900";
   const inputBg = isDark ? "bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-indigo-500" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-indigo-400 placeholder:text-slate-300";
@@ -948,14 +947,15 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
               </div>
               <div className="flex items-center gap-2">
                 <h1 className={`text-2xl font-black tracking-tight leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>BentoGWA</h1>
-                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-100/50 border border-indigo-100 px-1.5 py-0.5 rounded-md inline-block">by Ced1e</span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md inline-block border ${isDark ? 'text-indigo-300 bg-indigo-900/40 border-indigo-800/50' : 'text-indigo-500 bg-indigo-100/50 border-indigo-100'}`}>by Ced1e</span>
               </div>
             </div>
             
             <div className="flex items-center gap-4 relative">
-             <button onClick={openExportModal} className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-xs font-bold hover:shadow-sm hover:-translate-y-0.5 transition-all ${isDark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                Export PDF
+              <button onClick={openExportModal} className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 border rounded-lg text-[10px] sm:text-xs font-bold hover:shadow-sm hover:-translate-y-0.5 transition-all ${isDark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                <span className="hidden sm:inline">Export PDF</span>
+                <span className="sm:hidden">Export</span>
               </button>
               <div className="text-right hidden sm:block">
                 <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{profile.name.split(' ')[0]}</p>
