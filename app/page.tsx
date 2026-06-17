@@ -10,6 +10,8 @@ const SCALE_CONFIGS = {
     name: "PH: 1.0 (Highest) - 5.0 (Lowest)", 
     lowerIsBetter: true, 
     deans: 1.75,
+    maxGrade: 1.0,
+    minGrade: 5.0,
     getYLabels: () => ["1.0", "2.0", "3.0", "4.0", "5.0"],
     getHeight: (gwa: number) => gwa > 0 ? ((5.0 - gwa) / 4.0) * 100 : 0,
     getColor: (gwa: number) => gwa <= 1.75 ? 'emerald' : gwa <= 3.0 ? 'amber' : 'rose'
@@ -18,6 +20,8 @@ const SCALE_CONFIGS = {
     name: "PH: 4.0 (Highest) - 1.0 (Lowest)", 
     lowerIsBetter: false, 
     deans: 3.5,
+    maxGrade: 4.0,
+    minGrade: 1.0,
     getYLabels: () => ["4.0", "3.0", "2.0", "1.0", "0.0"],
     getHeight: (gwa: number) => gwa > 0 ? (gwa / 4.0) * 100 : 0,
     getColor: (gwa: number) => gwa >= 3.0 ? 'emerald' : gwa >= 2.0 ? 'amber' : 'rose'
@@ -26,6 +30,8 @@ const SCALE_CONFIGS = {
     name: "US: 4.0 (A) - 0.0 (F)", 
     lowerIsBetter: false, 
     deans: 3.5,
+    maxGrade: 4.0,
+    minGrade: 0.0,
     getYLabels: () => ["4.0", "3.0", "2.0", "1.0", "0.0"],
     getHeight: (gwa: number) => gwa > 0 ? (gwa / 4.0) * 100 : 0,
     getColor: (gwa: number) => gwa >= 3.0 ? 'emerald' : gwa >= 2.0 ? 'amber' : 'rose'
@@ -34,6 +40,8 @@ const SCALE_CONFIGS = {
     name: "Percentage: 100% - 65%", 
     lowerIsBetter: false, 
     deans: 90,
+    maxGrade: 100,
+    minGrade: 65,
     getYLabels: () => ["100", "90", "80", "75", "65"],
     getHeight: (gwa: number) => gwa > 0 ? Math.max(0, ((gwa - 65) / 35) * 100) : 0,
     getColor: (gwa: number) => gwa >= 90 ? 'emerald' : gwa >= 75 ? 'amber' : 'rose'
@@ -251,7 +259,7 @@ function ResetPasswordView({ setView, token }: { setView: (v: any) => void, toke
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">New Password</label>
                 <div className="mt-1 relative group">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2-2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </span>
                   <input required value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -693,15 +701,16 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     name: sessionName,
     course: "Loading...",
     university: "Loading...",
-    gradingScale: "PH_1_5" // NEW STATE
+    gradingScale: "PH_1_5" 
   });
 
-  // Calculate the active scale for rendering logic
   const activeScale = SCALE_CONFIGS[profile.gradingScale as keyof typeof SCALE_CONFIGS] || SCALE_CONFIGS["PH_1_5"];
 
   const [targetGwa, setTargetGwa] = useState("");
+  const [remainingUnits, setRemainingUnits] = useState("30"); // NEW STATE FOR WHAT-IF MATH
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [tempTarget, setTempTarget] = useState(targetGwa);
+  const [tempUnits, setTempUnits] = useState(remainingUnits);
   
   const [expandedSemesterId, setExpandedSemesterId] = useState<number | null>(null);
   const [editingSemesterId, setEditingSemesterId] = useState<number | null>(null);
@@ -713,7 +722,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const [selectedExportSems, setSelectedExportSems] = useState<number[]>([]);
   const [themeMode, setThemeMode] = useState<"Light" | "Dark">("Light");
   
-  // Single declaration of isDark
   const isDark = themeMode === "Dark";
 
   useEffect(() => {
@@ -805,27 +813,18 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
         alert("Report content not found!");
         return;
       }
-
-      // High-resolution capture without flashing the screen
       const canvas = await html2canvas(input, { 
         scale: 2, 
         useCORS: true,
-        backgroundColor: "#ffffff" // Pure white background to be safe
+        backgroundColor: "#ffffff"
       });
-
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
-      
-      // Fit the 1080px wide image perfectly onto the A4 PDF page
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      
-      // Auto-name the file based on the user
       pdf.save(`BentoGWA_${profile.name.replace(/\s+/g, '_')}_Report.pdf`);
-      
-      setIsExportModalOpen(false); // Close modal when done
+      setIsExportModalOpen(false);
     } catch (error) {
       console.error("PDF Generation Error:", error);
       alert("There was an error generating your PDF.");
@@ -848,9 +847,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       return { ...sem, gwa: semUnits > 0 ? (semPoints / semUnits).toFixed(4) : "0.0000", units: semUnits };
     });
 
-    // DYNAMIC SORTING
     allSubjects.sort((a, b) => activeScale.lowerIsBetter ? a.numGrade - b.numGrade : b.numGrade - a.numGrade);
-    
     const cumulative = totalUnits > 0 ? (totalPoints / totalUnits).toFixed(4) : "0.0000";
 
     return {
@@ -861,9 +858,15 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   }, [semesters, activeScale]);
 
   const saveTarget = () => {
-    const num = parseFloat(tempTarget);
-    if (!isNaN(num) && num > 0) setTargetGwa(num.toFixed(2));
+    const targetNum = parseFloat(tempTarget);
+    const unitsNum = parseFloat(tempUnits);
+    
+    if (!isNaN(targetNum) && targetNum > 0) setTargetGwa(targetNum.toFixed(2));
     else setTargetGwa("");
+    
+    if (!isNaN(unitsNum) && unitsNum > 0) setRemainingUnits(unitsNum.toString());
+    else setRemainingUnits("30"); // fallback default
+
     setIsEditingTarget(false);
   };
 
@@ -918,13 +921,53 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
 
   const cumulativeNum = parseFloat(analytics.cumulative);
   const numericTarget = parseFloat(targetGwa);
+  const numericRemainingUnits = parseFloat(remainingUnits) || 30;
   
   // DYNAMIC TARGET & DEANS LISTER LOGIC
-  const isOnTrack = activeScale.lowerIsBetter ? cumulativeNum <= numericTarget : cumulativeNum >= numericTarget;
   const isDeansLister = cumulativeNum > 0 && (activeScale.lowerIsBetter ? cumulativeNum <= activeScale.deans : cumulativeNum >= activeScale.deans);
-  const targetDiff = Math.abs(numericTarget - cumulativeNum).toFixed(2);
-
   
+  // NEW "WHAT-IF" MATH ENGINE
+  let requiredFutureGrade = 0;
+  let targetPossible = true;
+  let targetMessage = "";
+  let targetBadgeColor = "bg-indigo-100 text-indigo-700 border-indigo-200";
+
+  if (numericTarget > 0 && cumulativeNum > 0 && analytics.totalUnits > 0) {
+    const totalFutureUnits = analytics.totalUnits + numericRemainingUnits;
+    requiredFutureGrade = ((numericTarget * totalFutureUnits) - (cumulativeNum * analytics.totalUnits)) / numericRemainingUnits;
+    
+    if (activeScale.lowerIsBetter) { 
+      // e.g., 1.0 to 5.0 system
+      if (requiredFutureGrade < activeScale.maxGrade) {
+        targetPossible = false;
+        targetMessage = "Impossible. Requires better than " + activeScale.maxGrade.toFixed(2);
+        targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
+      } else if (requiredFutureGrade > activeScale.minGrade) {
+        targetMessage = "You already failed this target mathematically.";
+        targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
+      } else if (requiredFutureGrade > 3.0) { // Assuming 3.0 is a passing threshold in PH
+        targetMessage = `Safe! You only need to average ${requiredFutureGrade.toFixed(2)}`;
+        targetBadgeColor = isDark ? "bg-emerald-900/30 text-emerald-400 border-emerald-800" : "bg-emerald-50 text-emerald-600 border-emerald-100";
+      } else {
+        targetMessage = `You must average a ${requiredFutureGrade.toFixed(2)}`;
+        targetBadgeColor = isDark ? "bg-amber-900/30 text-amber-400 border-amber-800" : "bg-amber-50 text-amber-600 border-amber-100";
+      }
+    } else {
+      // e.g., 4.0 system or 100% system
+      if (requiredFutureGrade > activeScale.maxGrade) {
+        targetPossible = false;
+        targetMessage = "Impossible. Requires higher than " + (activeScale.maxGrade > 10 ? activeScale.maxGrade + "%" : activeScale.maxGrade.toFixed(2));
+        targetBadgeColor = isDark ? "bg-rose-900/30 text-rose-400 border-rose-800" : "bg-rose-50 text-rose-600 border-rose-100";
+      } else if (requiredFutureGrade < activeScale.minGrade) {
+        targetMessage = `Safe! You only need to average ${requiredFutureGrade.toFixed(2)}`;
+        targetBadgeColor = isDark ? "bg-emerald-900/30 text-emerald-400 border-emerald-800" : "bg-emerald-50 text-emerald-600 border-emerald-100";
+      } else {
+        targetMessage = `You must average a ${requiredFutureGrade.toFixed(2)}`;
+        targetBadgeColor = isDark ? "bg-amber-900/30 text-amber-400 border-amber-800" : "bg-amber-50 text-amber-600 border-amber-100";
+      }
+    }
+  }
+
   const mainBg = isDark ? "bg-slate-950 text-slate-100" : "bg-[#F8FAFC] text-slate-900";
   const cardBg = isDark ? "bg-slate-900 border-slate-800 shadow-none text-slate-100" : "bg-white border-slate-200/60 shadow-sm text-slate-900";
   const inputBg = isDark ? "bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-indigo-500" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-indigo-400 placeholder:text-slate-300";
@@ -1231,24 +1274,46 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                  `}} />
               </div>
 
+              {/* --- NEW WHAT-IF ANALYZER CARD --- */}
               <div className={`col-span-2 lg:col-span-1 rounded-[20px] p-5 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 flex flex-col justify-center ${cardBg}`}>
-                <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${textSubHeading}`}>Global Target</p>
-                <div className="flex items-center gap-2">
-                  {isEditingTarget ? (
-                    <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} className={`w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200 ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
-                  ) : (
-                    <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
-                      <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
-                      <svg className={`w-4 h-4 transition-colors ${isDark ? 'text-slate-600 group-hover:text-indigo-400' : 'text-slate-300 group-hover:text-indigo-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    </button>
-                  )}
+                <div className="flex justify-between items-center mb-4">
+                  <p className={`text-xs font-bold uppercase tracking-wider ${textSubHeading}`}>What-If Calculator</p>
+                  <svg className={`w-4 h-4 ${textMuted}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                 </div>
-                {cumulativeNum > 0 && !isNaN(numericTarget) && (
-                  <p className={`text-[11px] font-semibold mt-2 px-2 py-1 rounded inline-block border ${isOnTrack ? (isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-600 border-emerald-100') : (isDark ? 'bg-amber-900/30 text-amber-400 border-amber-800' : 'bg-amber-50 text-amber-600 border-amber-100')}`}>
-                    {isOnTrack 
-                      ? `✓ You are ${targetDiff} ahead of target!` 
-                      : `⚠ You need ${targetDiff} to reach target.`}
-                  </p>
+                
+                {isEditingTarget ? (
+                  <div className="space-y-3 animate-in zoom-in-95 duration-200">
+                    <div>
+                      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Target Final GWA</label>
+                      <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
+                    </div>
+                    <div>
+                      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Remaining Units to Take</label>
+                      <input type="number" min="1" step="1" onKeyDown={blockInvalidChars} value={tempUnits} onChange={(e) => setTempUnits(e.target.value)} className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
+                    </div>
+                    <button onClick={saveTarget} className="w-full mt-2 text-xs font-bold text-white bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">Calculate</button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col group cursor-pointer active:scale-95 transition-transform" onClick={() => setIsEditingTarget(true)}>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
+                      <span className={`text-xs font-medium ${textMuted}`}>Goal</span>
+                    </div>
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <span className={`text-xl font-bold tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{remainingUnits}</span>
+                      <span className={`text-xs font-medium ${textMuted}`}>Units Left</span>
+                    </div>
+                    
+                    {cumulativeNum > 0 && !isNaN(numericTarget) ? (
+                      <div className={`p-3 rounded-xl border ${targetBadgeColor} shadow-sm`}>
+                         <p className="text-xs font-bold leading-tight">{targetMessage}</p>
+                      </div>
+                    ) : (
+                      <div className={`p-3 rounded-xl border border-dashed ${isDark ? 'border-slate-700 text-slate-500' : 'border-slate-300 text-slate-400'}`}>
+                         <p className="text-xs font-medium text-center">Click to set your target goal.</p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -1309,7 +1374,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 <input type="text" value={profile.university} onChange={(e) => setProfile({...profile, university: e.target.value})} className={`mt-1 w-full rounded-xl px-4 py-3 text-[16px] md:text-sm outline-none transition-all ${inputBg}`} />
               </div>
               
-              {/* --- NEW GRADING SCALE DROPDOWN --- */}
               <div className="pt-2">
                 <label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-700'}`}>Grading Scale</label>
                 <select 
@@ -1340,175 +1404,148 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
         ========================================
       */}
       {isExportModalOpen && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
-    <div className={`rounded-[24px] p-6 max-w-md w-full shadow-2xl border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
-      <h3 className={`text-lg font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Export Aesthetic Report</h3>
-      <p className={`text-sm mb-6 ${textMuted}`}>Select the semesters to include. We will generate a high-res, beautifully styled dark-mode PDF perfect for sharing.</p>
-      
-      <div className={`flex justify-between items-center mb-3 pb-3 border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-        <span className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Select All</span>
-        <input 
-          type="checkbox" 
-          className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-          checked={selectedExportSems.length === semesters.length}
-          onChange={(e) => setSelectedExportSems(e.target.checked ? semesters.map(s => s.id) : [])}
-        />
-      </div>
-
-      <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2 custom-scrollbar">
-        {semesters.map(sem => (
-          <label key={sem.id} className={`flex justify-between items-center p-3 rounded-xl cursor-pointer border transition-colors ${isDark ? 'hover:bg-slate-800 border-transparent hover:border-slate-700' : 'hover:bg-slate-50 border-transparent hover:border-slate-200'}`}>
-            <div>
-              <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{sem.name}</p>
-              <p className={`text-[10px] font-medium ${textMuted}`}>GWA: {parseFloat(analytics.processedSemesters.find(s => s.id === sem.id)?.gwa || "0").toFixed(2)}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
+          <div className={`rounded-[24px] p-6 max-w-md w-full shadow-2xl border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+            <h3 className={`text-lg font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Export Aesthetic Report</h3>
+            <p className={`text-sm mb-6 ${textMuted}`}>Select the semesters to include. We will generate a high-res, beautifully styled dark-mode PDF perfect for sharing.</p>
+            
+            <div className={`flex justify-between items-center mb-3 pb-3 border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+              <span className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Select All</span>
+              <input 
+                type="checkbox" 
+                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                checked={selectedExportSems.length === semesters.length}
+                onChange={(e) => setSelectedExportSems(e.target.checked ? semesters.map(s => s.id) : [])}
+              />
             </div>
-            <input 
-              type="checkbox" 
-              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-              checked={selectedExportSems.includes(sem.id)}
-              onChange={(e) => {
-                if (e.target.checked) setSelectedExportSems([...selectedExportSems, sem.id]);
-                else setSelectedExportSems(selectedExportSems.filter(id => id !== sem.id));
-              }}
-            />
-          </label>
-        ))}
-      </div>
 
-      <div className="flex gap-3">
-        <button onClick={() => setIsExportModalOpen(false)} disabled={isGeneratingPDF} className={`w-1/3 py-3 text-sm font-bold rounded-xl transition-colors ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
-        <button 
-          onClick={exportToPDF} 
-          disabled={selectedExportSems.length === 0 || isGeneratingPDF}
-          className="w-2/3 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md transition-all flex justify-center items-center gap-2"
-        >
-          {isGeneratingPDF ? (
-            <><svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Rendering...</>
-          ) : "Download Canvas"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-<div 
-  id="pdf-report-content" 
-  style={{ 
-    position: "fixed", 
-    top: "-20000px", 
-    left: "-20000px", 
-    width: "1080px", 
-    minHeight: "1530px", 
-    padding: "80px", 
-    background: "#ffffff", // Pure white background
-    color: "#0f172a", // Dark text
-    fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-    boxSizing: "border-box"
-  }}
->
-  {/* PREMIUM HEADER WITH LOGO */}
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "80px", borderBottom: "2px solid #e2e8f0", paddingBottom: "32px" }}>
-    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-      {/* Logo */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '56px', height: '56px', padding: '6px', background: '#0f172a', borderRadius: '12px' }}>
-        <div style={{ background: '#ffffff', borderRadius: '6px' }}></div>
-        <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
-        <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
-        <div style={{ background: '#6366f1', borderRadius: '6px' }}></div>
-      </div>
-      <div>
-        <h1 style={{ fontSize: "42px", fontWeight: "900", margin: "0", letterSpacing: "-1.5px", color: "#0f172a" }}>BentoGWA</h1>
-        <p style={{ fontSize: "16px", color: "#6366f1", margin: "4px 0 0 0", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "3px" }}>Official Academic Report</p>
-      </div>
-    </div>
-    <div style={{ textAlign: "right" }}>
-      <p style={{ fontSize: "16px", color: "#64748b", margin: "0", fontWeight: "bold" }}>Generated on</p>
-      <p style={{ fontSize: "20px", color: "#0f172a", margin: "4px 0 0 0", fontWeight: "bold" }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-    </div>
-  </div>
-
-  {/* STUDENT PROFILE CARD */}
-  <div style={{ 
-    background: "#ffffff", 
-    border: "1px solid #cbd5e1", 
-    borderRadius: "32px", 
-    padding: "48px", 
-    display: "flex", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    marginBottom: "60px",
-    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)"
-  }}>
-    <div>
-      <p style={{ fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Student Profile</p>
-      <h2 style={{ fontSize: "56px", fontWeight: "900", margin: "0 0 16px 0", letterSpacing: "-2px", color: "#0f172a" }}>{profile.name}</h2>
-      <p style={{ fontSize: "22px", color: "#334155", margin: "0", fontWeight: "500" }}>{profile.course}</p>
-      <p style={{ fontSize: "18px", color: "#64748b", margin: "8px 0 0 0" }}>{profile.university}</p>
-    </div>
-    
-    <div style={{ 
-      textAlign: "right", 
-      background: "#f8fafc", 
-      padding: "32px 48px", 
-      borderRadius: "24px", 
-      border: "1px solid #e2e8f0" 
-    }}>
-      <p style={{ fontSize: "14px", color: "#6366f1", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Cumulative GWA</p>
-      <p style={{ fontSize: "72px", fontWeight: "900", margin: "0", color: "#0f172a", lineHeight: "1" }}>{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
-      <p style={{ fontSize: "18px", color: "#64748b", margin: "16px 0 0 0", fontWeight: "bold" }}>Total Earned Units: <span style={{color:"#0f172a"}}>{analytics.totalUnits}</span></p>
-    </div>
-  </div>
-
-  {/* SEMESTER BREAKDOWNS */}
-  <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
-    {analytics.processedSemesters
-      .filter(sem => selectedExportSems.includes(sem.id))
-      .sort((a,b) => a.id - b.id)
-      .map(sem => {
-        // Dynamic coloring for semester grade
-        const gradeColor = activeScale.getColor(parseFloat(sem.gwa));
-        const badgeColor = gradeColor === 'emerald' ? '#059669' : gradeColor === 'amber' ? '#d97706' : '#e11d48';
-        const badgeBg = gradeColor === 'emerald' ? '#ecfdf5' : gradeColor === 'amber' ? '#fffbeb' : '#fff1f2';
-
-        return (
-        <div key={sem.id} style={{ breakInside: "avoid" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #e2e8f0", paddingBottom: "16px", marginBottom: "24px" }}>
-            <div>
-              <h3 style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0", color: "#0f172a" }}>{sem.name}</h3>
-              <p style={{ fontSize: "16px", color: "#64748b", margin: "0" }}>{sem.subjects.length} Subjects Recorded</p>
+            <div className="space-y-3 max-h-60 overflow-y-auto mb-6 pr-2 custom-scrollbar">
+              {semesters.map(sem => (
+                <label key={sem.id} className={`flex justify-between items-center p-3 rounded-xl cursor-pointer border transition-colors ${isDark ? 'hover:bg-slate-800 border-transparent hover:border-slate-700' : 'hover:bg-slate-50 border-transparent hover:border-slate-200'}`}>
+                  <div>
+                    <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{sem.name}</p>
+                    <p className={`text-[10px] font-medium ${textMuted}`}>GWA: {parseFloat(analytics.processedSemesters.find(s => s.id === sem.id)?.gwa || "0").toFixed(2)}</p>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    checked={selectedExportSems.includes(sem.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedExportSems([...selectedExportSems, sem.id]);
+                      else setSelectedExportSems(selectedExportSems.filter(id => id !== sem.id));
+                    }}
+                  />
+                </label>
+              ))}
             </div>
-            <div style={{ background: badgeBg, padding: "8px 20px", borderRadius: "100px", border: `1px solid ${badgeColor}` }}>
-              <span style={{ fontSize: "14px", fontWeight: "bold", color: badgeColor, textTransform: "uppercase", letterSpacing: "1px" }}>Sem GWA: </span>
-              <span style={{ fontSize: "24px", fontWeight: "900", color: badgeColor }}>{parseFloat(sem.gwa).toFixed(2)}</span>
+
+            <div className="flex gap-3">
+              <button onClick={() => setIsExportModalOpen(false)} disabled={isGeneratingPDF} className={`w-1/3 py-3 text-sm font-bold rounded-xl transition-colors ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
+              <button 
+                onClick={exportToPDF} 
+                disabled={selectedExportSems.length === 0 || isGeneratingPDF}
+                className="w-2/3 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md transition-all flex justify-center items-center gap-2"
+              >
+                {isGeneratingPDF ? (
+                  <><svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Rendering...</>
+                ) : "Download Canvas"}
+              </button>
             </div>
           </div>
-          
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={{ padding: "16px 8px", textAlign: "left", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Subject Name</th>
-                <th style={{ padding: "16px 8px", textAlign: "center", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Units</th>
-                <th style={{ padding: "16px 8px", textAlign: "right", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Grade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sem.subjects.map((sub: any) => (
-                <tr key={sub.id}>
-                  <td style={{ padding: "20px 8px", borderBottom: "1px solid #e2e8f0", fontSize: "18px", fontWeight: "bold", color: "#1e293b" }}>{sub.name || "Untitled"}</td>
-                  <td style={{ padding: "20px 8px", textAlign: "center", borderBottom: "1px solid #e2e8f0", fontSize: "18px", color: "#475569" }}>{sub.units || "-"}</td>
-                  <td style={{ padding: "20px 8px", textAlign: "right", borderBottom: "1px solid #e2e8f0", fontSize: "20px", fontWeight: "900", color: "#0f172a" }}>{sub.grade || "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
-      )})}
-      
-      {selectedExportSems.length === 0 && (
-        <p style={{ textAlign: "center", color: "#64748b", fontSize: "18px", fontStyle: "italic", marginTop: "40px" }}>No semesters selected for export.</p>
       )}
-  </div>
-</div>
-      </>
-    );
+
+      {/* ========================================
+        HIDDEN PDF CANVAS EXPORT
+        ========================================
+      */}
+      <div 
+        id="pdf-report-content" 
+        style={{ 
+          position: "fixed", top: "-20000px", left: "-20000px", width: "1080px", minHeight: "1530px", padding: "80px", 
+          background: "#ffffff", color: "#0f172a", fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif", boxSizing: "border-box"
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "80px", borderBottom: "2px solid #e2e8f0", paddingBottom: "32px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '56px', height: '56px', padding: '6px', background: '#0f172a', borderRadius: '12px' }}>
+              <div style={{ background: '#ffffff', borderRadius: '6px' }}></div>
+              <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
+              <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
+              <div style={{ background: '#6366f1', borderRadius: '6px' }}></div>
+            </div>
+            <div>
+              <h1 style={{ fontSize: "42px", fontWeight: "900", margin: "0", letterSpacing: "-1.5px", color: "#0f172a" }}>BentoGWA</h1>
+              <p style={{ fontSize: "16px", color: "#6366f1", margin: "4px 0 0 0", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "3px" }}>Official Academic Report</p>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ fontSize: "16px", color: "#64748b", margin: "0", fontWeight: "bold" }}>Generated on</p>
+            <p style={{ fontSize: "20px", color: "#0f172a", margin: "4px 0 0 0", fontWeight: "bold" }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+        </div>
+
+        <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "32px", padding: "48px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "60px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)" }}>
+          <div>
+            <p style={{ fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Student Profile</p>
+            <h2 style={{ fontSize: "56px", fontWeight: "900", margin: "0 0 16px 0", letterSpacing: "-2px", color: "#0f172a" }}>{profile.name}</h2>
+            <p style={{ fontSize: "22px", color: "#334155", margin: "0", fontWeight: "500" }}>{profile.course}</p>
+            <p style={{ fontSize: "18px", color: "#64748b", margin: "8px 0 0 0" }}>{profile.university}</p>
+          </div>
+          <div style={{ textAlign: "right", background: "#f8fafc", padding: "32px 48px", borderRadius: "24px", border: "1px solid #e2e8f0" }}>
+            <p style={{ fontSize: "14px", color: "#6366f1", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Cumulative GWA</p>
+            <p style={{ fontSize: "72px", fontWeight: "900", margin: "0", color: "#0f172a", lineHeight: "1" }}>{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
+            <p style={{ fontSize: "18px", color: "#64748b", margin: "16px 0 0 0", fontWeight: "bold" }}>Total Earned Units: <span style={{color:"#0f172a"}}>{analytics.totalUnits}</span></p>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
+          {analytics.processedSemesters
+            .filter(sem => selectedExportSems.includes(sem.id))
+            .sort((a,b) => a.id - b.id)
+            .map(sem => {
+              const gradeColor = activeScale.getColor(parseFloat(sem.gwa));
+              const badgeColor = gradeColor === 'emerald' ? '#059669' : gradeColor === 'amber' ? '#d97706' : '#e11d48';
+              const badgeBg = gradeColor === 'emerald' ? '#ecfdf5' : gradeColor === 'amber' ? '#fffbeb' : '#fff1f2';
+
+              return (
+              <div key={sem.id} style={{ breakInside: "avoid" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #e2e8f0", paddingBottom: "16px", marginBottom: "24px" }}>
+                  <div>
+                    <h3 style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0", color: "#0f172a" }}>{sem.name}</h3>
+                    <p style={{ fontSize: "16px", color: "#64748b", margin: "0" }}>{sem.subjects.length} Subjects Recorded</p>
+                  </div>
+                  <div style={{ background: badgeBg, padding: "8px 20px", borderRadius: "100px", border: `1px solid ${badgeColor}` }}>
+                    <span style={{ fontSize: "14px", fontWeight: "bold", color: badgeColor, textTransform: "uppercase", letterSpacing: "1px" }}>Sem GWA: </span>
+                    <span style={{ fontSize: "24px", fontWeight: "900", color: badgeColor }}>{parseFloat(sem.gwa).toFixed(2)}</span>
+                  </div>
+                </div>
+                
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: "16px 8px", textAlign: "left", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Subject Name</th>
+                      <th style={{ padding: "16px 8px", textAlign: "center", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Units</th>
+                      <th style={{ padding: "16px 8px", textAlign: "right", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Grade</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sem.subjects.map((sub: any) => (
+                      <tr key={sub.id}>
+                        <td style={{ padding: "20px 8px", borderBottom: "1px solid #e2e8f0", fontSize: "18px", fontWeight: "bold", color: "#1e293b" }}>{sub.name || "Untitled"}</td>
+                        <td style={{ padding: "20px 8px", textAlign: "center", borderBottom: "1px solid #e2e8f0", fontSize: "18px", color: "#475569" }}>{sub.units || "-"}</td>
+                        <td style={{ padding: "20px 8px", textAlign: "right", borderBottom: "1px solid #e2e8f0", fontSize: "20px", fontWeight: "900", color: "#0f172a" }}>{sub.grade || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )})}
+            {selectedExportSems.length === 0 && (
+              <p style={{ textAlign: "center", color: "#64748b", fontSize: "18px", fontStyle: "italic", marginTop: "40px" }}>No semesters selected for export.</p>
+            )}
+        </div>
+      </div>
+    </>
+  );
 }
