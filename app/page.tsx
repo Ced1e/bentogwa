@@ -259,7 +259,7 @@ function ResetPasswordView({ setView, token }: { setView: (v: any) => void, toke
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">New Password</label>
                 <div className="mt-1 relative group">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2-2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </span>
                   <input required value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -343,10 +343,6 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
   const numericTarget = parseFloat(targetGwa);
   const isOnTrack = numericGwa > 0 && !isNaN(numericTarget) && (activeScale.lowerIsBetter ? numericGwa <= numericTarget : numericGwa >= numericTarget);
 
-  const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
-  };
-
   let gwaConfig = { gradient: "from-slate-400 to-slate-600", text: "text-slate-800", bg: "bg-slate-100", dot: "bg-slate-400", message: "Awaiting input" };
   if (numericGwa > 0) {
     const color = activeScale.getColor(numericGwa);
@@ -414,13 +410,40 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                     {subjects.map((subject, index) => (
                       <div key={subject.id} className="grid grid-cols-12 gap-3 items-center group animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div className="col-span-6 relative">
-                          <input type="text" placeholder={`Subject ${index + 1}`} value={subject.name} maxLength={30} onChange={(e) => updateSubject(subject.id, "name", e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium placeholder:text-slate-300 hover:border-indigo-200" />
+                          <input 
+                            type="text" 
+                            placeholder={`Subject ${index + 1}`} 
+                            value={subject.name} 
+                            maxLength={40} 
+                            onChange={(e) => updateSubject(subject.id, "name", e.target.value)} 
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium placeholder:text-slate-300 hover:border-indigo-200" 
+                          />
                         </div>
                         <div className="col-span-3">
-                          <input type="number" min="0" step="0.25" placeholder="0.0" value={subject.grade} onInput={(e: any) => e.target.value = e.target.value.slice(0, 5)} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "grade", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" />
+                          <input 
+                            type="text" 
+                            inputMode="decimal" 
+                            placeholder="0.0" 
+                            value={subject.grade} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (/^\d*\.?\d*$/.test(val) && val.length <= 5) updateSubject(subject.id, "grade", val);
+                            }} 
+                            className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" 
+                          />
                         </div>
                         <div className="col-span-2 md:col-span-3">
-                          <input type="number" min="0" placeholder="0" value={subject.units} onInput={(e: any) => e.target.value = e.target.value.slice(0, 2)} onKeyDown={blockInvalidChars} onChange={(e) => updateSubject(subject.id, "units", e.target.value)} className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" />
+                          <input 
+                            type="text" 
+                            inputMode="numeric" 
+                            placeholder="0" 
+                            value={subject.units} 
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (/^\d*\.?\d*$/.test(val) && val.length <= 4) updateSubject(subject.id, "units", val);
+                            }} 
+                            className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" 
+                          />
                         </div>
                         <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => removeSubject(subject.id)} className="text-slate-300 hover:text-rose-500 transition-transform hover:scale-125">
@@ -450,7 +473,18 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
               </div>
               <div className="flex items-center gap-3 mt-1">
                 {isEditingTarget ? (
-                  <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} onBlur={saveTarget} className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" />
+                  <input 
+                    autoFocus 
+                    type="text" 
+                    inputMode="decimal"
+                    value={tempTarget} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^\d*\.?\d*$/.test(val) && val.length <= 5) setTempTarget(val);
+                    }} 
+                    onBlur={saveTarget} 
+                    className="w-24 font-black text-3xl border-b-2 border-indigo-500 outline-none bg-indigo-50 px-2 py-1 rounded-t-lg tabular-nums animate-in zoom-in-95 duration-200" 
+                  />
                 ) : (
                   <button onClick={() => setIsEditingTarget(true)} className="flex items-center gap-2 group transition-transform active:scale-95">
                     <span className="text-3xl font-black text-slate-800 tabular-nums">{targetGwa || "--"}</span>
@@ -935,10 +969,6 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     setView('guest');
   };
 
-  const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
-  };
-
   const cumulativeNum = parseFloat(analytics.cumulative);
   const numericTarget = parseFloat(targetGwa);
   
@@ -1174,37 +1204,42 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                 <div className="space-y-2">
                                    {sem.subjects.map((sub: any, idx: number) => (
                                      <div key={sub.id} className="grid grid-cols-12 gap-2 items-center group">
-                                       <div className="col-span-6"><input type="text" placeholder={`Subj ${idx+1}`} value={sub.name} maxLength={40} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'name', e.target.value)} className={`w-full rounded-lg px-3 py-2 text-[16px] md:text-sm outline-none transition-colors ${inputBg}`} /></div>
+                                       <div className="col-span-6">
+                                         <input 
+                                           type="text" 
+                                           placeholder={`Subj ${idx+1}`} 
+                                           value={sub.name} 
+                                           maxLength={40} 
+                                           onChange={(e) => updateEditingSubject(sem.id, sub.id, 'name', e.target.value)} 
+                                           className={`w-full rounded-lg px-3 py-2 text-[16px] md:text-sm outline-none transition-colors ${inputBg}`} 
+                                         />
+                                       </div>
                                        <div className="col-span-3">
-  <input 
-    type="text" 
-    inputMode="decimal" 
-    placeholder="0.0" 
-    value={sub.grade} 
-    onChange={(e) => {
-      const val = e.target.value;
-      if (/^\d*\.?\d*$/.test(val) && val.length <= 5) {
-        updateEditingSubject(sem.id, sub.id, 'grade', val);
-      }
-    }} 
-    className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} 
-  />
-</div>
-<div className="col-span-2">
-  <input 
-    type="text" 
-    inputMode="numeric" 
-    placeholder="0" 
-    value={sub.units} 
-    onChange={(e) => {
-      const val = e.target.value;
-      if (/^\d*$/.test(val) && val.length <= 2) {
-        updateEditingSubject(sem.id, sub.id, 'units', val);
-      }
-    }} 
-    className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums ${inputBg}`} 
-  />
-</div>
+                                         <input 
+                                           type="text" 
+                                           inputMode="decimal" 
+                                           placeholder="0.0" 
+                                           value={sub.grade} 
+                                           onChange={(e) => {
+                                             const val = e.target.value;
+                                             if (/^\d*\.?\d*$/.test(val) && val.length <= 5) updateEditingSubject(sem.id, sub.id, 'grade', val);
+                                           }} 
+                                           className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} 
+                                         />
+                                       </div>
+                                       <div className="col-span-2">
+                                         <input 
+                                           type="text" 
+                                           inputMode="numeric" 
+                                           placeholder="0" 
+                                           value={sub.units} 
+                                           onChange={(e) => {
+                                             const val = e.target.value;
+                                             if (/^\d*\.?\d*$/.test(val) && val.length <= 4) updateEditingSubject(sem.id, sub.id, 'units', val);
+                                           }} 
+                                           className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums ${inputBg}`} 
+                                         />
+                                       </div>
                                        <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => removeEditingSubject(sem.id, sub.id)} className="text-slate-400 hover:text-rose-500 hover:scale-125 transition-transform"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
                                      </div>
                                    ))}
@@ -1382,46 +1417,40 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 </div>
                 
                 {isEditingTarget ? (
-  <div className="space-y-3 animate-in zoom-in-95 duration-200">
-    <div>
-      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Target Final GWA</label>
-      <input 
-        autoFocus 
-        type="text" 
-        inputMode="decimal"
-        value={tempTarget} 
-        onChange={(e) => {
-          const val = e.target.value;
-          // Only allow digits and max one decimal point, up to 5 chars total
-          if (/^\d*\.?\d*$/.test(val) && val.length <= 5) {
-            setTempTarget(val);
-          }
-        }} 
-        className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} 
-      />
-    </div>
-    <div>
-      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Remaining Units to Take</label>
-      <input 
-        type="text" 
-        inputMode="numeric"
-        value={tempUnits} 
-        onChange={(e) => {
-          const val = e.target.value;
-          // Only allow whole numbers, up to 3 chars total
-          if (/^\d*$/.test(val) && val.length <= 3) {
-            setTempUnits(val);
-          }
-        }} 
-        className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} 
-      />
-    </div>
-    <div className="flex gap-2 mt-2">
-       <button onClick={() => setIsEditingTarget(false)} className={`w-1/3 text-xs font-bold rounded-lg transition-colors ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>Cancel</button>
-       <button onClick={saveTarget} className="w-2/3 text-xs font-bold text-white bg-indigo-600 px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors">Calculate</button>
-    </div>
-  </div>
-) : (
+                  <div className="space-y-3 animate-in zoom-in-95 duration-200">
+                    <div>
+                      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Target Final GWA</label>
+                      <input 
+                        autoFocus 
+                        type="text" 
+                        inputMode="decimal"
+                        value={tempTarget} 
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (/^\d*\.?\d*$/.test(val) && val.length <= 5) setTempTarget(val);
+                        }} 
+                        className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} 
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Remaining Units to Take</label>
+                      <input 
+                        type="text" 
+                        inputMode="numeric"
+                        value={tempUnits} 
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (/^\d*$/.test(val) && val.length <= 3) setTempUnits(val);
+                        }} 
+                        className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} 
+                      />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                       <button onClick={() => setIsEditingTarget(false)} className={`w-1/3 text-xs font-bold rounded-lg transition-colors ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>Cancel</button>
+                       <button onClick={saveTarget} className="w-2/3 text-xs font-bold text-white bg-indigo-600 px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors">Calculate</button>
+                    </div>
+                  </div>
+                ) : (
                   <div className="flex flex-col group cursor-pointer active:scale-95 transition-transform" onClick={handleEditTargetClick}>
                     <div className="flex items-baseline gap-2 mb-1">
                       <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
@@ -1454,7 +1483,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                       </div>
                       <p className={`text-lg font-black truncate leading-tight w-full ${textHeading}`} title={analytics.bestSubject?.name || ""}>{analytics.bestSubject?.name || "—"}</p>
                     </div>
-                    <p className="text-sm font-bold text-emerald-500 mt-2">{analytics.bestSubject?.grade || "—"}</p>
+                    <p className="text-sm font-bold text-emerald-500 mt-2">
+                      {analytics.bestSubject?.grade ? parseFloat(analytics.bestSubject.grade).toFixed(2) : "—"}
+                    </p>
                  </div>
                  
                  <div className={`rounded-[20px] p-5 border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col justify-between overflow-hidden ${cardBg}`}>
@@ -1465,7 +1496,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                       </div>
                       <p className={`text-lg font-black truncate leading-tight w-full ${textHeading}`} title={analytics.worstSubject?.name || ""}>{analytics.worstSubject?.name || "—"}</p>
                     </div>
-                    <p className="text-sm font-bold text-rose-500 mt-2">{analytics.worstSubject?.grade || "—"}</p>
+                    <p className="text-sm font-bold text-rose-500 mt-2">
+                      {analytics.worstSubject?.grade ? parseFloat(analytics.worstSubject.grade).toFixed(2) : "—"}
+                    </p>
                  </div>
               </div>
 
