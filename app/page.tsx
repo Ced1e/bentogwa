@@ -1175,8 +1175,36 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                    {sem.subjects.map((sub: any, idx: number) => (
                                      <div key={sub.id} className="grid grid-cols-12 gap-2 items-center group">
                                        <div className="col-span-6"><input type="text" placeholder={`Subj ${idx+1}`} value={sub.name} maxLength={40} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'name', e.target.value)} className={`w-full rounded-lg px-3 py-2 text-[16px] md:text-sm outline-none transition-colors ${inputBg}`} /></div>
-                                       <div className="col-span-3"><input type="number" min="0" step="0.25" placeholder="0.0" value={sub.grade} onInput={(e: any) => e.target.value = e.target.value.slice(0, 5)} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'grade', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} /></div>
-                                       <div className="col-span-2"><input type="number" min="0" placeholder="0" value={sub.units} onInput={(e: any) => e.target.value = e.target.value.slice(0, 2)} onKeyDown={blockInvalidChars} onChange={(e) => updateEditingSubject(sem.id, sub.id, 'units', e.target.value)} className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums ${inputBg}`} /></div>
+                                       <div className="col-span-3">
+  <input 
+    type="text" 
+    inputMode="decimal" 
+    placeholder="0.0" 
+    value={sub.grade} 
+    onChange={(e) => {
+      const val = e.target.value;
+      if (/^\d*\.?\d*$/.test(val) && val.length <= 5) {
+        updateEditingSubject(sem.id, sub.id, 'grade', val);
+      }
+    }} 
+    className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} 
+  />
+</div>
+<div className="col-span-2">
+  <input 
+    type="text" 
+    inputMode="numeric" 
+    placeholder="0" 
+    value={sub.units} 
+    onChange={(e) => {
+      const val = e.target.value;
+      if (/^\d*$/.test(val) && val.length <= 2) {
+        updateEditingSubject(sem.id, sub.id, 'units', val);
+      }
+    }} 
+    className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums ${inputBg}`} 
+  />
+</div>
                                        <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => removeEditingSubject(sem.id, sub.id)} className="text-slate-400 hover:text-rose-500 hover:scale-125 transition-transform"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
                                      </div>
                                    ))}
@@ -1354,21 +1382,46 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 </div>
                 
                 {isEditingTarget ? (
-                  <div className="space-y-3 animate-in zoom-in-95 duration-200">
-                    <div>
-                      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Target Final GWA</label>
-                      <input autoFocus type="number" min="0" step="0.05" onKeyDown={blockInvalidChars} onInput={(e: any) => e.target.value = e.target.value.slice(0, 5)} value={tempTarget} onChange={(e) => setTempTarget(e.target.value)} className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
-                    </div>
-                    <div>
-                      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Remaining Units to Take</label>
-                      <input type="number" min="1" step="1" onKeyDown={blockInvalidChars} onInput={(e: any) => e.target.value = e.target.value.slice(0, 3)} value={tempUnits} onChange={(e) => setTempUnits(e.target.value)} className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} />
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                       <button onClick={() => setIsEditingTarget(false)} className={`w-1/3 text-xs font-bold rounded-lg transition-colors ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>Cancel</button>
-                       <button onClick={saveTarget} className="w-2/3 text-xs font-bold text-white bg-indigo-600 px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors">Calculate</button>
-                    </div>
-                  </div>
-                ) : (
+  <div className="space-y-3 animate-in zoom-in-95 duration-200">
+    <div>
+      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Target Final GWA</label>
+      <input 
+        autoFocus 
+        type="text" 
+        inputMode="decimal"
+        value={tempTarget} 
+        onChange={(e) => {
+          const val = e.target.value;
+          // Only allow digits and max one decimal point, up to 5 chars total
+          if (/^\d*\.?\d*$/.test(val) && val.length <= 5) {
+            setTempTarget(val);
+          }
+        }} 
+        className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} 
+      />
+    </div>
+    <div>
+      <label className={`text-[10px] font-bold uppercase ${textMuted}`}>Remaining Units to Take</label>
+      <input 
+        type="text" 
+        inputMode="numeric"
+        value={tempUnits} 
+        onChange={(e) => {
+          const val = e.target.value;
+          // Only allow whole numbers, up to 3 chars total
+          if (/^\d*$/.test(val) && val.length <= 3) {
+            setTempUnits(val);
+          }
+        }} 
+        className={`w-full font-black text-xl border-b-2 border-indigo-500 outline-none px-2 py-1 rounded-t-lg tabular-nums ${isDark ? 'bg-slate-800 text-white' : 'bg-indigo-50 text-slate-900'}`} 
+      />
+    </div>
+    <div className="flex gap-2 mt-2">
+       <button onClick={() => setIsEditingTarget(false)} className={`w-1/3 text-xs font-bold rounded-lg transition-colors ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>Cancel</button>
+       <button onClick={saveTarget} className="w-2/3 text-xs font-bold text-white bg-indigo-600 px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors">Calculate</button>
+    </div>
+  </div>
+) : (
                   <div className="flex flex-col group cursor-pointer active:scale-95 transition-transform" onClick={handleEditTargetClick}>
                     <div className="flex items-baseline gap-2 mb-1">
                       <span className={`text-3xl font-black tabular-nums group-hover:text-indigo-500 transition-colors ${textHeading}`}>{targetGwa || "--"}</span>
