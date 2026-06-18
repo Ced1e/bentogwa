@@ -14,7 +14,8 @@ const SCALE_CONFIGS = {
     minGrade: 5.0,
     getYLabels: () => ["1.0", "2.0", "3.0", "4.0", "5.0"],
     getHeight: (gwa: number) => gwa > 0 ? ((5.0 - gwa) / 4.0) * 100 : 0,
-    getColor: (gwa: number) => gwa <= 1.75 ? 'emerald' : gwa <= 3.0 ? 'amber' : 'rose'
+    getColor: (gwa: number) => gwa <= 1.75 ? 'emerald' : gwa <= 3.0 ? 'amber' : 'rose',
+    suggestions: ["1.00", "1.25", "1.50", "1.75", "2.00", "2.25", "2.50", "2.75", "3.00", "5.00"]
   },
   "PH_4_1": { 
     name: "PH: 4.0 (Highest) - 1.0 (Lowest)", 
@@ -24,7 +25,8 @@ const SCALE_CONFIGS = {
     minGrade: 1.0,
     getYLabels: () => ["4.0", "3.0", "2.0", "1.0", "0.0"],
     getHeight: (gwa: number) => gwa > 0 ? (gwa / 4.0) * 100 : 0,
-    getColor: (gwa: number) => gwa >= 3.0 ? 'emerald' : gwa >= 2.0 ? 'amber' : 'rose'
+    getColor: (gwa: number) => gwa >= 3.0 ? 'emerald' : gwa >= 2.0 ? 'amber' : 'rose',
+    suggestions: ["4.00", "3.50", "3.00", "2.50", "2.00", "1.50", "1.00"]
   },
   "US_4_0": { 
     name: "US: 4.0 (A) - 0.0 (F)", 
@@ -34,7 +36,8 @@ const SCALE_CONFIGS = {
     minGrade: 0.0,
     getYLabels: () => ["4.0", "3.0", "2.0", "1.0", "0.0"],
     getHeight: (gwa: number) => gwa > 0 ? (gwa / 4.0) * 100 : 0,
-    getColor: (gwa: number) => gwa >= 3.0 ? 'emerald' : gwa >= 2.0 ? 'amber' : 'rose'
+    getColor: (gwa: number) => gwa >= 3.0 ? 'emerald' : gwa >= 2.0 ? 'amber' : 'rose',
+    suggestions: ["4.00", "3.70", "3.30", "3.00", "2.70", "2.30", "2.00", "1.70", "1.30", "1.00", "0.00"]
   },
   "PERCENT": { 
     name: "Percentage: 100% - 65%", 
@@ -44,7 +47,8 @@ const SCALE_CONFIGS = {
     minGrade: 65,
     getYLabels: () => ["100", "90", "80", "75", "65"],
     getHeight: (gwa: number) => gwa > 0 ? Math.max(0, ((gwa - 65) / 35) * 100) : 0,
-    getColor: (gwa: number) => gwa >= 90 ? 'emerald' : gwa >= 75 ? 'amber' : 'rose'
+    getColor: (gwa: number) => gwa >= 90 ? 'emerald' : gwa >= 75 ? 'amber' : 'rose',
+    suggestions: ["100", "95", "90", "85", "80", "75"]
   }
 };
 
@@ -305,9 +309,42 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
   const updateSubject = (id: number, field: string, value: string) => setSubjects(subjects.map((sub) => (sub.id === id ? { ...sub, [field]: value } : sub)));
   const removeSubject = (id: number) => setSubjects(subjects.filter((sub) => sub.id !== id));
 
+  // Strict validation on blur
+  const handleGradeBlur = (id: number, val: string) => {
+    if (!val) return;
+    let num = parseFloat(val);
+    if (isNaN(num)) return;
+    
+    // Auto-correct 50 to 5.0 on relevant scales
+    if (activeScale.maxGrade <= 5.0 && num >= 10) num = num / 10;
+    
+    const high = Math.max(activeScale.maxGrade, activeScale.minGrade);
+    const low = Math.min(activeScale.maxGrade, activeScale.minGrade);
+    if (num > high) num = high;
+    if (num < low) num = low;
+
+    updateSubject(id, "grade", Number(num.toFixed(2)).toString());
+  };
+
+  const handleUnitBlur = (id: number, val: string) => {
+    if (!val) return;
+    let num = parseFloat(val);
+    if (isNaN(num)) return;
+    if (num > 10) num = 10;
+    if (num < 0) num = 0;
+    updateSubject(id, "units", num.toString());
+  };
+
   const saveTarget = () => {
-    const num = parseFloat(tempTarget);
-    if (!isNaN(num) && num > 0) setTargetGwa(num.toFixed(2));
+    let targetNum = parseFloat(tempTarget);
+    if (activeScale.maxGrade <= 5.0 && targetNum >= 10) targetNum = targetNum / 10;
+    
+    const high = Math.max(activeScale.maxGrade, activeScale.minGrade);
+    const low = Math.min(activeScale.maxGrade, activeScale.minGrade);
+    if (targetNum > high) targetNum = high;
+    if (targetNum < low) targetNum = low;
+
+    if (!isNaN(targetNum) && targetNum > 0) setTargetGwa(targetNum.toFixed(2));
     else setTargetGwa("");
     setIsEditingTarget(false);
   };
@@ -343,6 +380,10 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
   const numericTarget = parseFloat(targetGwa);
   const isOnTrack = numericGwa > 0 && !isNaN(numericTarget) && (activeScale.lowerIsBetter ? numericGwa <= numericTarget : numericGwa >= numericTarget);
 
+  const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+  };
+
   let gwaConfig = { gradient: "from-slate-400 to-slate-600", text: "text-slate-800", bg: "bg-slate-100", dot: "bg-slate-400", message: "Awaiting input" };
   if (numericGwa > 0) {
     const color = activeScale.getColor(numericGwa);
@@ -354,6 +395,15 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
   return (
     <main className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-24 selection:bg-indigo-100 font-sans">
       <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
+        
+        {/* GLOBAL DATALISTS FOR AUTOCOMPLETE */}
+        <datalist id={`grades-${activeScale.name.replace(/\s+/g, '-')}`}>
+          {activeScale.suggestions.map(g => <option key={g} value={g} />)}
+        </datalist>
+        <datalist id="unit-suggestions">
+          {[1, 2, 3, 4, 5, 6].map(u => <option key={u} value={u} />)}
+        </datalist>
+
         <header className="flex justify-between items-center border-b border-slate-200/60 pb-6 pt-2">
           <div className="flex items-center gap-3">
             <div className="grid grid-cols-2 gap-[2px] p-1.5 bg-slate-900 rounded-[8px] shadow-sm">
@@ -383,7 +433,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
             <div className="relative overflow-hidden bg-white rounded-[24px] p-8 md:p-12 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] border border-slate-200/60 flex flex-col items-center text-center hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-1.5 transition-all duration-500">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-slate-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
               <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] mb-2 relative z-10">Current GWA</p>
-              <h2 className={`text-7xl md:text-8xl font-black tracking-tighter tabular-nums bg-gradient-to-br ${gwaConfig.gradient} bg-clip-text text-transparent pb-2 relative z-10 transition-all duration-500`}>{displayGwa}</h2>
+              <h2 className={`text-7xl md:text-8xl font-black tracking-tighter tabular-nums bg-gradient-to-br ${gwaConfig.gradient} bg-clip-text text-transparent pb-2 pr-3 relative z-10 transition-all duration-500`}>{displayGwa}</h2>
               <div className={`mt-4 px-5 py-2 rounded-full flex items-center gap-2.5 transition-colors duration-500 ${gwaConfig.bg} relative z-10`}>
                 <div className={`w-2.5 h-2.5 rounded-full ${gwaConfig.dot} animate-pulse`}></div>
                 <p className={`text-sm font-bold ${gwaConfig.text}`}>{gwaConfig.message}</p>
@@ -423,26 +473,30 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                           <input 
                             type="text" 
                             inputMode="decimal" 
+                            list={`grades-${activeScale.name.replace(/\s+/g, '-')}`}
                             placeholder="0.0" 
                             value={subject.grade} 
                             onChange={(e) => {
                               const val = e.target.value;
                               if (/^\d*\.?\d*$/.test(val) && val.length <= 5) updateSubject(subject.id, "grade", val);
                             }} 
-                            className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-bold tabular-nums hover:border-indigo-200" 
+                            onBlur={(e) => handleGradeBlur(subject.id, e.target.value)}
+                            className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm font-bold outline-none transition-all tabular-nums focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200" 
                           />
                         </div>
                         <div className="col-span-2 md:col-span-3">
                           <input 
                             type="text" 
                             inputMode="numeric" 
+                            list="unit-suggestions"
                             placeholder="0" 
                             value={subject.units} 
                             onChange={(e) => {
                               const val = e.target.value;
                               if (/^\d*\.?\d*$/.test(val) && val.length <= 4) updateSubject(subject.id, "units", val);
                             }} 
-                            className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all font-medium tabular-nums hover:border-indigo-200" 
+                            onBlur={(e) => handleUnitBlur(subject.id, e.target.value)}
+                            className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-[16px] md:text-sm outline-none transition-all font-medium tabular-nums focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200" 
                           />
                         </div>
                         <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -477,6 +531,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                     autoFocus 
                     type="text" 
                     inputMode="decimal"
+                    list={`grades-${activeScale.name.replace(/\s+/g, '-')}`}
                     value={tempTarget} 
                     onChange={(e) => {
                       const val = e.target.value;
@@ -675,7 +730,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
               <div className="mt-1 relative group">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2-2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 </span>
                 <input required name="password" value={formData.password} onChange={handleInputChange} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -905,9 +960,14 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   };
 
   const saveTarget = () => {
-    const targetNum = parseFloat(tempTarget);
-    const enteredRemainingUnits = parseFloat(tempUnits);
+    let targetNum = parseFloat(tempTarget);
+    if (activeScale.maxGrade <= 5.0 && targetNum >= 10) targetNum = targetNum / 10;
     
+    const high = Math.max(activeScale.maxGrade, activeScale.minGrade);
+    const low = Math.min(activeScale.maxGrade, activeScale.minGrade);
+    if (targetNum > high) targetNum = high;
+    if (targetNum < low) targetNum = low;
+
     if (!isNaN(targetNum) && targetNum > 0) {
       setTargetGwa(targetNum.toFixed(2));
       localStorage.setItem("bentoTargetGwa", targetNum.toFixed(2));
@@ -916,6 +976,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       localStorage.setItem("bentoTargetGwa", "");
     }
     
+    let enteredRemainingUnits = parseFloat(tempUnits);
+    if (enteredRemainingUnits < 0) enteredRemainingUnits = 0;
+
     if (!isNaN(enteredRemainingUnits) && enteredRemainingUnits >= 0) {
       const absoluteTotal = analytics.totalUnits + enteredRemainingUnits;
       setTotalDegreeUnits(absoluteTotal.toString());
@@ -936,6 +999,30 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   };
   const addEditingSubject = (semId: number) => {
     setSemesters(semesters.map(sem => sem.id === semId ? { ...sem, subjects: [...sem.subjects, { id: Date.now(), name: "", grade: "", units: "", tag: "" }] } : sem));
+  };
+
+  // Strict validation on blur for Premium View edits
+  const handleEditingGradeBlur = (semId: number, subId: number, val: string) => {
+    if (!val) return;
+    let num = parseFloat(val);
+    if (isNaN(num)) return;
+    if (activeScale.maxGrade <= 5.0 && num >= 10) num = num / 10;
+    
+    const high = Math.max(activeScale.maxGrade, activeScale.minGrade);
+    const low = Math.min(activeScale.maxGrade, activeScale.minGrade);
+    if (num > high) num = high;
+    if (num < low) num = low;
+
+    updateEditingSubject(semId, subId, "grade", Number(num.toFixed(2)).toString());
+  };
+
+  const handleEditingUnitBlur = (semId: number, subId: number, val: string) => {
+    if (!val) return;
+    let num = parseFloat(val);
+    if (isNaN(num)) return;
+    if (num > 10) num = 10;
+    if (num < 0) num = 0;
+    updateEditingSubject(semId, subId, "units", num.toString());
   };
   
   const addNewSemester = () => {
@@ -1055,6 +1142,14 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       <main className={`min-h-screen pb-24 font-sans animate-in fade-in duration-500 transition-colors print:hidden ${mainBg}`}>
         <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
           
+          {/* GLOBAL DATALISTS FOR AUTOCOMPLETE */}
+          <datalist id={`grades-${activeScale.name.replace(/\s+/g, '-')}`}>
+            {activeScale.suggestions.map(g => <option key={g} value={g} />)}
+          </datalist>
+          <datalist id="unit-suggestions">
+            {[1, 2, 3, 4, 5, 6].map(u => <option key={u} value={u} />)}
+          </datalist>
+
           <header className={`flex justify-between items-center border-b pb-6 pt-2 ${isDark ? 'border-slate-800' : 'border-slate-200/60'}`}>
             <div className="flex items-center gap-3">
               <div className="grid grid-cols-2 gap-[2px] p-1.5 bg-indigo-600 rounded-[8px]">
@@ -1126,7 +1221,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[80px] opacity-20 pointer-events-none"></div>
                 <div className="relative z-10">
                   <p className="text-sm font-bold text-indigo-300 uppercase tracking-[0.2em] mb-1">Cumulative GWA</p>
-                  <h2 className="text-6xl md:text-7xl font-black tracking-tighter tabular-nums text-white">{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</h2>
+                  <h2 className="text-6xl md:text-7xl font-black tracking-tighter tabular-nums text-white pr-3">{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</h2>
                   <div className="mt-3 inline-flex px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-bold rounded-lg border border-emerald-500/30">
                     {isDeansLister ? "Dean's Lister Standing 🏆" : "Active Standing"}
                   </div>
@@ -1232,27 +1327,31 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                        <div className="col-span-3">
                                          <input 
                                            type="text" 
-                                           inputMode="decimal" 
+                                           inputMode="decimal"
+                                           list={`grades-${activeScale.name.replace(/\s+/g, '-')}`} 
                                            placeholder="0.0" 
                                            value={sub.grade} 
                                            onChange={(e) => {
                                              const val = e.target.value;
                                              if (/^\d*\.?\d*$/.test(val) && val.length <= 5) updateEditingSubject(sem.id, sub.id, 'grade', val);
                                            }} 
-                                           className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums ${inputBg}`} 
+                                           onBlur={(e) => handleEditingGradeBlur(sem.id, sub.id, e.target.value)}
+                                           className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm font-bold outline-none transition-colors tabular-nums focus:bg-slate-800 focus:ring-2 focus:ring-indigo-500 ${inputBg}`} 
                                          />
                                        </div>
                                        <div className="col-span-2">
                                          <input 
                                            type="text" 
-                                           inputMode="numeric" 
+                                           inputMode="numeric"
+                                           list="unit-suggestions" 
                                            placeholder="0" 
                                            value={sub.units} 
                                            onChange={(e) => {
                                              const val = e.target.value;
                                              if (/^\d*\.?\d*$/.test(val) && val.length <= 4) updateEditingSubject(sem.id, sub.id, 'units', val);
                                            }} 
-                                           className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums ${inputBg}`} 
+                                           onBlur={(e) => handleEditingUnitBlur(sem.id, sub.id, e.target.value)}
+                                           className={`w-full text-center rounded-lg px-2 py-2 text-[16px] md:text-sm outline-none transition-colors tabular-nums focus:bg-slate-800 focus:ring-2 focus:ring-indigo-500 ${inputBg}`} 
                                          />
                                        </div>
                                        <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => removeEditingSubject(sem.id, sub.id)} className="text-slate-400 hover:text-rose-500 hover:scale-125 transition-transform"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></div>
@@ -1439,6 +1538,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                         autoFocus 
                         type="text" 
                         inputMode="decimal"
+                        list={`grades-${activeScale.name.replace(/\s+/g, '-')}`}
                         value={tempTarget} 
                         onChange={(e) => {
                           const val = e.target.value;
@@ -1452,6 +1552,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                       <input 
                         type="text" 
                         inputMode="numeric"
+                        list="unit-suggestions"
                         value={tempUnits} 
                         onChange={(e) => {
                           const val = e.target.value;
