@@ -578,15 +578,24 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
               </div>
             </div>
             
-            <div onClick={() => setView('signup')} className="col-span-2 lg:col-span-1 relative overflow-hidden bg-slate-900 rounded-[20px] p-6 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer group">
+            <div onClick={() => setView('signup')} className="col-span-2 lg:col-span-1 relative overflow-hidden bg-gradient-to-br from-slate-900 to-indigo-950 rounded-[20px] p-6 shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group border border-indigo-900/50">
+               {/* Subtle background glow effect */}
+               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-[60px] opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity duration-500"></div>
+               
                <div className="relative z-10 flex flex-col h-full justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Track Your Growth</h3>
-                  <p className="text-sm font-medium text-slate-400 mb-5">Save your GWA across semesters and unlock analytics.</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-lg font-black text-white tracking-tight">Unlock BentoGWA Pro</h3>
+                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded border border-emerald-500/30">100% Free</span>
+                  </div>
+                  <p className="text-xs font-medium text-slate-300 mb-3 leading-relaxed">
+                    Stop losing your progress when you close the tab. Save your semesters securely to the cloud, export aesthetic PDF transcripts, and unlock the predictive What-If math engine.
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-medium mb-6 italic">Built by a student, for students. No ads, no paywalls, no catch.</p>
                 </div>
-                <div className="inline-flex px-4 py-2 bg-indigo-600 group-hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-colors active:scale-95 w-fit items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                  Start Tracking
+                <div className="inline-flex px-5 py-2.5 bg-indigo-600 group-hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all active:scale-95 w-fit items-center gap-2 shadow-md">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  Create Free Account
                 </div>
               </div>
             </div>
