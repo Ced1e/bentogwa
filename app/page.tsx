@@ -513,7 +513,7 @@ function GuestView({ setView }: { setView: (v: any) => void }) {
                 </div>
                 <div className="flex items-start gap-2 group min-w-0">
                   <div className="mt-0.5 text-rose-500 group-hover:translate-y-1 transition-transform shrink-0">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7-7m0 0l-7-7m7 7V3" /></svg>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Needs Focus</p>
@@ -675,7 +675,7 @@ function AuthView({ setView, type }: { setView: (v: any) => void, type: 'login' 
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
               <div className="mt-1 relative group">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2-2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 </span>
                 <input required name="password" value={formData.password} onChange={handleInputChange} type={showPassword ? "text" : "password"} placeholder="••••••••" className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-[16px] md:text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 hover:border-indigo-200 outline-none transition-all" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -756,6 +756,9 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const [selectedExportSems, setSelectedExportSems] = useState<number[]>([]);
   const [themeMode, setThemeMode] = useState<"Light" | "Dark">("Light");
   
+  // Custom Alert/Confirm Modal State
+  const [dialog, setDialog] = useState<{isOpen: boolean, type: 'alert' | 'confirm', title: string, message: string, onConfirm?: () => void}>({ isOpen: false, type: 'alert', title: '', message: '' });
+
   const isDark = themeMode === "Dark";
 
   // Persistent Target Data Fetching
@@ -774,10 +777,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     localStorage.setItem("bentoGwaTheme", newTheme);
   };
 
-  // ---> THE FIX: Add isLoadingData to the if-statement <---
   useEffect(() => {
-    // Only fetch if we haven't loaded the data yet! 
-    // This prevents tab-switching from overwriting unsaved edits.
     if (session && isLoadingData) {
       fetch("/api/profile")
         .then(res => res.json())
@@ -849,7 +849,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     try {
       const input = document.getElementById("pdf-report-content");
       if (!input) {
-        alert("Report content not found!");
+        setDialog({ isOpen: true, type: 'alert', title: 'Export Failed', message: 'Report content could not be found.' });
         return;
       }
       const canvas = await html2canvas(input, { 
@@ -866,7 +866,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
       setIsExportModalOpen(false);
     } catch (error) {
       console.error("PDF Generation Error:", error);
-      alert("There was an error generating your PDF.");
+      setDialog({ isOpen: true, type: 'alert', title: 'Export Failed', message: 'There was an error generating your PDF. Please try again.' });
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -940,7 +940,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   
   const addNewSemester = () => {
     if (editingSemesterId !== null || isCreatingSemesterId !== null) {
-      alert("Please save or cancel your current semester edits first.");
+      setDialog({ isOpen: true, type: 'alert', title: 'Unsaved Changes', message: 'Please save or cancel your current semester edits before adding a new one.' });
       return;
     }
     const newId = Date.now();
@@ -953,14 +953,21 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
 
   const deleteSemester = (e: any, semId: number) => {
     e.stopPropagation();
-    if(confirm("Are you sure you want to delete this entire semester?")) {
-      const updated = semesters.filter(s => s.id !== semId);
-      setSemesters(updated);
-      syncToCloud(updated);
-      if (expandedSemesterId === semId) setExpandedSemesterId(null);
-      if (editingSemesterId === semId) setEditingSemesterId(null);
-      if (isCreatingSemesterId === semId) setIsCreatingSemesterId(null);
-    }
+    setDialog({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Delete Semester',
+      message: 'Are you sure you want to delete this entire semester? This action cannot be undone.',
+      onConfirm: () => {
+        const updated = semesters.filter(s => s.id !== semId);
+        setSemesters(updated);
+        syncToCloud(updated);
+        if (expandedSemesterId === semId) setExpandedSemesterId(null);
+        if (editingSemesterId === semId) setEditingSemesterId(null);
+        if (isCreatingSemesterId === semId) setIsCreatingSemesterId(null);
+        setDialog({ isOpen: false, type: 'alert', title: '', message: '' });
+      }
+    });
   };
 
   const openExportModal = () => {
@@ -971,6 +978,10 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
   const handleLogout = async () => {
     await signOut({ redirect: false });
     setView('guest');
+  };
+
+  const blockInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
   };
 
   const cumulativeNum = parseFloat(analytics.cumulative);
@@ -1178,7 +1189,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
                                <button onClick={(e) => { 
                                  e.stopPropagation(); 
                                  if (editingSemesterId !== null && editingSemesterId !== sem.id) {
-                                    alert("Please save or cancel your current edits first.");
+                                    setDialog({ isOpen: true, type: 'alert', title: 'Unsaved Changes', message: 'Please save or cancel your current edits first.' });
                                     return;
                                  }
                                  setEditingSemesterId(sem.id); 
@@ -1510,6 +1521,45 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
           </div>
         </div>
       </main>
+
+      {/* ========================================
+        CUSTOM UI MODAL (REPLACES BROWSER ALERTS)
+        ========================================
+      */}
+      {dialog.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className={`rounded-[24px] p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              {dialog.type === 'confirm' ? (
+                <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+              )}
+              <h3 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{dialog.title}</h3>
+            </div>
+            <p className={`text-sm mb-6 ${textMuted}`}>{dialog.message}</p>
+            
+            <div className="flex gap-3 justify-end">
+              {dialog.type === 'confirm' && (
+                <button onClick={() => setDialog({...dialog, isOpen: false})} className={`py-2 px-4 text-sm font-bold rounded-xl transition-colors ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Cancel</button>
+              )}
+              <button 
+                onClick={() => {
+                  if (dialog.type === 'confirm' && dialog.onConfirm) dialog.onConfirm();
+                  else setDialog({...dialog, isOpen: false});
+                }} 
+                className={`py-2 px-4 text-sm font-bold text-white rounded-xl shadow-md transition-all active:scale-95 ${dialog.type === 'confirm' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+              >
+                {dialog.type === 'confirm' ? 'Delete' : 'Okay'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ========================================
         PROFILE SETTINGS MODAL
