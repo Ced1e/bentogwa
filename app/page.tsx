@@ -774,8 +774,11 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     localStorage.setItem("bentoGwaTheme", newTheme);
   };
 
+  // ---> THE FIX: Add isLoadingData to the if-statement <---
   useEffect(() => {
-    if (session) {
+    // Only fetch if we haven't loaded the data yet! 
+    // This prevents tab-switching from overwriting unsaved edits.
+    if (session && isLoadingData) {
       fetch("/api/profile")
         .then(res => res.json())
         .then(data => {
@@ -809,7 +812,8 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
           setIsLoadingData(false);
         });
     }
-  }, [session]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, isLoadingData]);
 
   const handleSaveProfile = async () => {
     setIsSavingProfile(true);
