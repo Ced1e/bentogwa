@@ -11,7 +11,7 @@ const SemesterSchema = new Schema(
     userEmail: {
       type: String,
       required: true,
-      index: true // Speeds up lookups significantly
+      // We remove the single index here...
     },
     semesterName: {
       type: String,
@@ -21,6 +21,10 @@ const SemesterSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// ...and apply a Compound Index here!
+// 1 = ascending (find email), -1 = descending (newest first)
+SemesterSchema.index({ userEmail: 1, createdAt: -1 });
 
 const Semester = models.Semester || model("Semester", SemesterSchema);
 export default Semester;
