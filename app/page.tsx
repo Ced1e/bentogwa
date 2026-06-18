@@ -899,7 +899,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
     } catch (err) {}
   };
 
-  const exportToPDF = async () => {
+const exportToPDF = async () => {
     setIsGeneratingPDF(true);
     try {
       const input = document.getElementById("pdf-report-content");
@@ -907,16 +907,38 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
         setDialog({ isOpen: true, type: 'alert', title: 'Export Failed', message: 'Report content could not be found.' });
         return;
       }
+      
+      // Render the canvas
       const canvas = await html2canvas(input, { 
         scale: 2, 
         useCORS: true,
         backgroundColor: "#ffffff"
       });
+      
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
+      
+      // A4 dimensions in mm
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Calculate how tall the canvas is in PDF millimeters
+      const canvasImgHeight = (canvas.height * pdfWidth) / canvas.width;
+      let heightLeft = canvasImgHeight;
+      let position = 0;
+
+      // Print first page
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, canvasImgHeight);
+      heightLeft -= pdfHeight;
+
+      // Loop and add new pages if the content overflows
+      while (heightLeft > 0) {
+        position -= pdfHeight; // Shift the image up by exactly one page height
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, canvasImgHeight);
+        heightLeft -= pdfHeight;
+      }
+
       pdf.save(`BentoGWA_${profile.name.replace(/\s+/g, '_')}_Report.pdf`);
       setIsExportModalOpen(false);
     } catch (error) {
@@ -1771,86 +1793,82 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
         </div>
       )}
 
-      {/* ========================================
-        HIDDEN PDF CANVAS EXPORT
-        ========================================
-      */}
       <div 
         id="pdf-report-content" 
         style={{ 
-          position: "fixed", top: "-20000px", left: "-20000px", width: "1080px", minHeight: "1530px", padding: "80px", 
+          position: "fixed", top: "-20000px", left: "-20000px", 
+          width: "794px", /* Exact A4 width at 96 DPI */
+          padding: "40px 50px", 
           background: "#ffffff", color: "#0f172a", fontFamily: "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif", boxSizing: "border-box"
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "80px", borderBottom: "2px solid #e2e8f0", paddingBottom: "32px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '56px', height: '56px', padding: '6px', background: '#0f172a', borderRadius: '12px' }}>
-              <div style={{ background: '#ffffff', borderRadius: '6px' }}></div>
-              <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
-              <div style={{ border: '3px solid rgba(255,255,255,0.7)', borderRadius: '6px' }}></div>
-              <div style={{ background: '#6366f1', borderRadius: '6px' }}></div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px", borderBottom: "1px solid #e2e8f0", paddingBottom: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', width: '32px', height: '32px', padding: '4px', background: '#0f172a', borderRadius: '8px' }}>
+              <div style={{ background: '#ffffff', borderRadius: '3px' }}></div>
+              <div style={{ border: '2px solid rgba(255,255,255,0.7)', borderRadius: '3px' }}></div>
+              <div style={{ border: '2px solid rgba(255,255,255,0.7)', borderRadius: '3px' }}></div>
+              <div style={{ background: '#6366f1', borderRadius: '3px' }}></div>
             </div>
             <div>
-              <h1 style={{ fontSize: "42px", fontWeight: "900", margin: "0", letterSpacing: "-1.5px", color: "#0f172a" }}>BentoGWA</h1>
-              <p style={{ fontSize: "16px", color: "#6366f1", margin: "4px 0 0 0", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "3px" }}>Official Academic Report</p>
+              <h1 style={{ fontSize: "20px", fontWeight: "900", margin: "0", letterSpacing: "-0.5px", color: "#0f172a" }}>BentoGWA</h1>
+              <p style={{ fontSize: "10px", color: "#6366f1", margin: "2px 0 0 0", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "1px" }}>Official Academic Report</p>
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <p style={{ fontSize: "16px", color: "#64748b", margin: "0", fontWeight: "bold" }}>Generated on</p>
-            <p style={{ fontSize: "20px", color: "#0f172a", margin: "4px 0 0 0", fontWeight: "bold" }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p style={{ fontSize: "10px", color: "#64748b", margin: "0", fontWeight: "bold", textTransform: "uppercase" }}>Generated On</p>
+            <p style={{ fontSize: "12px", color: "#0f172a", margin: "2px 0 0 0", fontWeight: "bold" }}>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
         </div>
 
-        <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "32px", padding: "48px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "60px", boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px" }}>
           <div>
-            <p style={{ fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Student Profile</p>
-            <h2 style={{ fontSize: "56px", fontWeight: "900", margin: "0 0 16px 0", letterSpacing: "-2px", color: "#0f172a" }}>{profile.name}</h2>
-            <p style={{ fontSize: "22px", color: "#334155", margin: "0", fontWeight: "500" }}>{profile.course}</p>
-            <p style={{ fontSize: "18px", color: "#64748b", margin: "8px 0 0 0" }}>{profile.university}</p>
+            <h2 style={{ fontSize: "24px", fontWeight: "900", margin: "0 0 4px 0", color: "#0f172a" }}>{profile.name}</h2>
+            <p style={{ fontSize: "12px", color: "#334155", margin: "0", fontWeight: "bold" }}>{profile.course}</p>
+            <p style={{ fontSize: "11px", color: "#64748b", margin: "2px 0 0 0" }}>{profile.university}</p>
           </div>
-          <div style={{ textAlign: "right", background: "#f8fafc", padding: "32px 48px", borderRadius: "24px", border: "1px solid #e2e8f0" }}>
-            <p style={{ fontSize: "14px", color: "#6366f1", textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 12px 0", fontWeight: "bold" }}>Cumulative GWA</p>
-            <p style={{ fontSize: "72px", fontWeight: "900", margin: "0", color: "#0f172a", lineHeight: "1" }}>{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
-            <p style={{ fontSize: "18px", color: "#64748b", margin: "16px 0 0 0", fontWeight: "bold" }}>Total Earned Units: <span style={{color:"#0f172a"}}>{analytics.totalUnits}</span></p>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ fontSize: "10px", color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 4px 0", fontWeight: "bold" }}>Cumulative GWA</p>
+            <p style={{ fontSize: "32px", fontWeight: "900", margin: "0", color: "#0f172a", lineHeight: "1" }}>{cumulativeNum > 0 ? cumulativeNum.toFixed(2) : "0.00"}</p>
+            <p style={{ fontSize: "11px", color: "#64748b", margin: "6px 0 0 0", fontWeight: "bold" }}>Total Earned Units: <span style={{color:"#0f172a"}}>{analytics.totalUnits}</span></p>
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "30px" }}>
           {analytics.processedSemesters
             .filter(sem => selectedExportSems.includes(sem.id))
             .sort((a,b) => a.id - b.id)
             .map(sem => {
               const gradeColor = activeScale.getColor(parseFloat(sem.gwa));
               const badgeColor = gradeColor === 'emerald' ? '#059669' : gradeColor === 'amber' ? '#d97706' : '#e11d48';
-              const badgeBg = gradeColor === 'emerald' ? '#ecfdf5' : gradeColor === 'amber' ? '#fffbeb' : '#fff1f2';
 
               return (
               <div key={sem.id} style={{ breakInside: "avoid" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #e2e8f0", paddingBottom: "16px", marginBottom: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid #cbd5e1", paddingBottom: "8px", marginBottom: "12px" }}>
                   <div>
-                    <h3 style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0", color: "#0f172a" }}>{sem.name}</h3>
-                    <p style={{ fontSize: "16px", color: "#64748b", margin: "0" }}>{sem.subjects.length} Subjects Recorded</p>
+                    <h3 style={{ fontSize: "14px", fontWeight: "bold", margin: "0 0 2px 0", color: "#0f172a" }}>{sem.name}</h3>
+                    <p style={{ fontSize: "11px", color: "#64748b", margin: "0" }}>{sem.subjects.length} Subjects Recorded • {sem.units} Total Units</p>
                   </div>
-                  <div style={{ background: badgeBg, padding: "8px 20px", borderRadius: "100px", border: `1px solid ${badgeColor}` }}>
-                    <span style={{ fontSize: "14px", fontWeight: "bold", color: badgeColor, textTransform: "uppercase", letterSpacing: "1px" }}>Sem GWA: </span>
-                    <span style={{ fontSize: "24px", fontWeight: "900", color: badgeColor }}>{parseFloat(sem.gwa).toFixed(2)}</span>
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: "bold", color: "#64748b", textTransform: "uppercase", marginRight: "6px" }}>Sem GWA: </span>
+                    <span style={{ fontSize: "16px", fontWeight: "900", color: badgeColor }}>{parseFloat(sem.gwa).toFixed(2)}</span>
                   </div>
                 </div>
                 
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      <th style={{ padding: "16px 8px", textAlign: "left", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Subject Name</th>
-                      <th style={{ padding: "16px 8px", textAlign: "center", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Units</th>
-                      <th style={{ padding: "16px 8px", textAlign: "right", fontSize: "14px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid #cbd5e1" }}>Grade</th>
+                      <th style={{ padding: "6px 4px", textAlign: "left", fontSize: "10px", color: "#64748b", textTransform: "uppercase", borderBottom: "1px solid #e2e8f0" }}>Subject Name</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", fontSize: "10px", color: "#64748b", textTransform: "uppercase", borderBottom: "1px solid #e2e8f0", width: "80px" }}>Units</th>
+                      <th style={{ padding: "6px 4px", textAlign: "right", fontSize: "10px", color: "#64748b", textTransform: "uppercase", borderBottom: "1px solid #e2e8f0", width: "80px" }}>Grade</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sem.subjects.map((sub: any) => (
                       <tr key={sub.id}>
-                        <td style={{ padding: "20px 8px", borderBottom: "1px solid #e2e8f0", fontSize: "18px", fontWeight: "bold", color: "#1e293b" }}>{sub.name || "Untitled"}</td>
-                        <td style={{ padding: "20px 8px", textAlign: "center", borderBottom: "1px solid #e2e8f0", fontSize: "18px", color: "#475569" }}>{sub.units || "-"}</td>
-                        <td style={{ padding: "20px 8px", textAlign: "right", borderBottom: "1px solid #e2e8f0", fontSize: "20px", fontWeight: "900", color: "#0f172a" }}>{sub.grade || "-"}</td>
+                        <td style={{ padding: "8px 4px", borderBottom: "1px solid #f1f5f9", fontSize: "12px", fontWeight: "bold", color: "#1e293b" }}>{sub.name || "Untitled"}</td>
+                        <td style={{ padding: "8px 4px", textAlign: "center", borderBottom: "1px solid #f1f5f9", fontSize: "12px", color: "#475569" }}>{sub.units || "-"}</td>
+                        <td style={{ padding: "8px 4px", textAlign: "right", borderBottom: "1px solid #f1f5f9", fontSize: "12px", fontWeight: "900", color: "#0f172a" }}>{sub.grade || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1858,7 +1876,7 @@ function PremiumDashboardView({ setView }: { setView: (v: any) => void }) {
               </div>
             )})}
             {selectedExportSems.length === 0 && (
-              <p style={{ textAlign: "center", color: "#64748b", fontSize: "18px", fontStyle: "italic", marginTop: "40px" }}>No semesters selected for export.</p>
+              <p style={{ textAlign: "center", color: "#64748b", fontSize: "12px", fontStyle: "italic", marginTop: "20px" }}>No semesters selected for export.</p>
             )}
         </div>
       </div>
